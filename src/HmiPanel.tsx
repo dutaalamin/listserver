@@ -39,6 +39,18 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
   const set = <K extends keyof HmiFilters>(k: K, v: HmiFilters[K]) =>
     setFilters((f) => ({ ...f, [k]: v }));
 
+  /** Kelompokkan hasil per ruangan, urut sesuai kemunculan pertama. */
+  const grup = useMemo(() => {
+    const map = new Map<string, Computer[]>();
+    for (const c of hasil) {
+      const key = c.room ?? "LAIN-LAIN";
+      const arr = map.get(key);
+      if (arr) arr.push(c);
+      else map.set(key, [c]);
+    }
+    return [...map.entries()];
+  }, [hasil]);
+
   const adaFilter = Boolean(
     filters.q || filters.osVersion || filters.computer || filters.diskType || filters.feature,
   );
@@ -325,90 +337,90 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
           )}
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-          <div className="w-full overflow-x-auto">
-            <table className="w-full min-w-max border-collapse text-[13px]">
-              <thead>
-                <tr>
-                  {["No", "Hostname", "Username", "IP Address", "MAC Address", "Ruangan", "Komputer", "Monitor", "OS", "Disk", "Fitur", ""].map((h, i) => (
-                    <th
-                      key={h + i}
-                      className={`whitespace-nowrap border-b border-slate-200 bg-slate-50 px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 ${
-                        i === 11 ? "text-right" : "text-left"
-                      }`}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {hasil.length === 0 && (
-                  <tr>
-                    <td colSpan={12} className="px-4 py-14 text-center text-sm text-slate-400">
-                      Tidak ada komputer yang cocok dengan pencarian.
-                    </td>
-                  </tr>
-                )}
-                {hasil.map((c) => (
-                  <tr key={c.no} className="transition hover:bg-slate-50">
-                    <td className="border-b border-slate-100 px-4 py-3 tabular-nums text-slate-400">{c.no}</td>
-                    <td className="border-b border-slate-100 px-4 py-3 font-semibold text-slate-900">
-                      {c.hostname ?? "—"}
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3 font-mono text-[12px] text-slate-600">
-                      {c.username ?? "—"}
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3">
-                      <button
-                        onClick={() => setDetail(c)}
-                        className="font-medium tabular-nums text-blue-600 hover:underline"
-                      >
-                        {c.ip}
-                      </button>
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3">
-                      <div className="font-mono text-[12px] tabular-nums text-slate-600">
-                        {c.mac1}
-                        {c.mac2 && <div className="text-slate-400">{c.mac2}</div>}
-                      </div>
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3 text-slate-600">
-                      {c.room ?? "—"}
-                      <div className="text-[11px] text-slate-400">{c.location ?? ""}</div>
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3 font-medium text-slate-800">{c.computer}</td>
-                    <td className="border-b border-slate-100 px-4 py-3 text-slate-600">
-                      {c.monitor}
-                      <div className="text-[11px] text-slate-400">{c.displayOutput} → {c.monitorInput}</div>
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3">
-                      <Badge className={osTone(c.osVersion)}>{c.osVersion}</Badge>
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3 text-slate-600">
-                      {c.diskType}
-                      <div className="text-[11px] text-slate-400">{c.diskCapacity}</div>
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3">
-                      <div className="flex gap-1">
-                        {c.specialHardware === "KVM" && <Badge className="bg-violet-50 text-violet-700">KVM</Badge>}
-                        {c.mac2 && <Badge className="bg-blue-50 text-blue-700">2 LAN</Badge>}
-                      </div>
-                    </td>
-                    <td className="border-b border-slate-100 px-4 py-3 text-right">
-                      <button
-                        onClick={() => setDetail(c)}
-                        className="text-xs font-medium text-slate-500 hover:text-blue-600"
-                      >
-                        Detail
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {grup.map(([ruangan, items]) => (
+          <div key={ruangan} className="space-y-2">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-blue-700">
+              {ruangan} ({items.length})
+            </h2>
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+              <div className="w-full overflow-x-auto">
+                <table className="w-full min-w-max border-collapse text-[13px]">
+                  <thead>
+                    <tr>
+                      {["No", "Hostname", "Username", "IP Address", "MAC Address", "Komputer", "Monitor", "OS", "Disk", "Fitur", ""].map((h, i) => (
+                        <th
+                          key={h + i}
+                          className={`whitespace-nowrap border-b border-slate-200 bg-slate-50 px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 ${
+                            i === 10 ? "text-right" : "text-left"
+                          }`}
+                        >
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {items.map((c) => (
+                      <tr key={c.no} className="transition hover:bg-slate-50">
+                        <td className="px-4 py-3 tabular-nums text-slate-400">{c.no}</td>
+                        <td className="px-4 py-3 font-semibold text-slate-900">{c.hostname ?? "—"}</td>
+                        <td className="px-4 py-3 font-mono text-[12px] text-slate-600">
+                          {c.username ?? "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => setDetail(c)}
+                            className="font-medium tabular-nums text-blue-600 hover:underline"
+                          >
+                            {c.ip}
+                          </button>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="font-mono text-[12px] tabular-nums text-slate-600">
+                            {c.mac1}
+                            {c.mac2 && <div className="text-slate-400">{c.mac2}</div>}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 font-medium text-slate-800">{c.computer}</td>
+                        <td className="px-4 py-3 text-slate-600">
+                          {c.monitor}
+                          <div className="text-[11px] text-slate-400">{c.displayOutput} → {c.monitorInput}</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge className={osTone(c.osVersion)}>{c.osVersion}</Badge>
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">
+                          {c.diskType}
+                          <div className="text-[11px] text-slate-400">{c.diskCapacity}</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-1">
+                            {c.specialHardware === "KVM" && <Badge className="bg-violet-50 text-violet-700">KVM</Badge>}
+                            {c.mac2 && <Badge className="bg-blue-50 text-blue-700">2 LAN</Badge>}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={() => setDetail(c)}
+                            className="text-xs font-medium text-slate-500 hover:text-blue-600"
+                          >
+                            Detail
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-        </div>
+        ))}
+
+        {hasil.length === 0 && (
+          <div className="py-20 text-center text-sm italic text-slate-400">
+            Tidak ada komputer yang cocok dengan pencarian.
+          </div>
+        )}
 
     </div>
   );
