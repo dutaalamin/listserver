@@ -10,12 +10,7 @@ import {
   type Computer, type HmiFilters,
 } from "./lib";
 
-const OS_TONE: Record<string, string> = {
-  "WINDOWS 10": "bg-blue-50 text-blue-700",
-  "WINDOWS 7": "bg-amber-50 text-amber-700",
-  "WINDOWS SERVER 2008": "bg-violet-50 text-violet-700",
-};
-const osTone = (os: string) => OS_TONE[os] ?? "bg-slate-100 text-slate-600";
+const osTone = () => "bg-slate-100 text-slate-700";
 
 function Badge({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -83,7 +78,7 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
   }
 
   const selectCls =
-    "h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-50";
+    "h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-100";
 
   // ============================ Detail ============================
   if (detail) {
@@ -134,17 +129,17 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
               <p className="mt-1 text-sm text-slate-500">{detail.computer}</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Badge className={osTone(detail.osVersion)}>{detail.osVersion}</Badge>
+              <Badge className={osTone()}>{detail.osVersion}</Badge>
               {detail.specialHardware === "KVM" && (
-                <Badge className="bg-violet-50 text-violet-700">KVM</Badge>
+                <Badge className="bg-slate-100 text-slate-700">KVM</Badge>
               )}
-              {detail.mac2 && <Badge className="bg-emerald-50 text-emerald-700">2 Kabel LAN</Badge>}
+              {detail.mac2 && <Badge className="bg-slate-100 text-slate-700">2 Kabel LAN</Badge>}
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-900">
                 <Cpu size={19} />
               </span>
               <div>
@@ -153,7 +148,7 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
               </div>
             </div>
             <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
                 <HardDrive size={19} />
               </span>
               <div>
@@ -164,7 +159,7 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
               </div>
             </div>
             <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
                 <Monitor size={19} />
               </span>
               <div>
@@ -197,7 +192,7 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
                 <Usb size={19} />
               </span>
               <div>
@@ -208,7 +203,7 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
               </div>
             </div>
             <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
                 <Shield size={19} />
               </span>
               <div>
@@ -224,7 +219,7 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
             {detail.no > 1 ? (
               <button
                 onClick={() => setDetail(computers.find((c) => c.no === detail.no - 1) ?? null)}
-                className="text-sm font-medium text-blue-600 hover:underline"
+                className="text-sm font-medium text-slate-900 hover:underline"
               >
                 ← #{detail.no - 1}
               </button>
@@ -232,7 +227,7 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
             {detail.no < computers.length ? (
               <button
                 onClick={() => setDetail(computers.find((c) => c.no === detail.no + 1) ?? null)}
-                className="text-sm font-medium text-blue-600 hover:underline"
+                className="text-sm font-medium text-slate-900 hover:underline"
               >
                 #{detail.no + 1} →
               </button>
@@ -254,7 +249,7 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
               value={filters.q}
               onChange={(e) => set("q", e.target.value)}
               placeholder="Cari IP, MAC, model, monitor, OS…"
-              className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-9 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-50"
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-9 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
             />
             {filters.q && (
               <button
@@ -271,7 +266,7 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
             onClick={() => setShowFilter((v) => !v)}
             className={`inline-flex h-11 items-center gap-2 rounded-xl border px-4 text-[13px] font-medium transition ${
               showFilter || adaFilter
-                ? "border-blue-300 bg-blue-50 text-blue-700"
+                ? "border-slate-400 bg-slate-100 text-slate-900"
                 : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
             }`}
           >
@@ -329,7 +324,7 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
           {adaFilter && (
             <button
               onClick={() => setFilters(EMPTY_HMI_FILTERS)}
-              className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
+              className="inline-flex items-center gap-1 text-xs font-medium text-slate-900 hover:text-slate-900"
             >
               <X size={13} />
               Reset filter
@@ -339,7 +334,7 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
 
         {grup.map(([ruangan, items]) => (
           <div key={ruangan} className="space-y-2">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-blue-700">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-900">
               {ruangan} ({items.length})
             </h2>
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
@@ -370,7 +365,7 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
                         <td className="px-4 py-3">
                           <button
                             onClick={() => setDetail(c)}
-                            className="font-medium tabular-nums text-blue-600 hover:underline"
+                            className="font-medium tabular-nums text-slate-900 hover:underline"
                           >
                             {c.ip}
                           </button>
@@ -387,7 +382,7 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
                           <div className="text-[11px] text-slate-400">{c.displayOutput} → {c.monitorInput}</div>
                         </td>
                         <td className="px-4 py-3">
-                          <Badge className={osTone(c.osVersion)}>{c.osVersion}</Badge>
+                          <Badge className={osTone()}>{c.osVersion}</Badge>
                         </td>
                         <td className="px-4 py-3 text-slate-600">
                           {c.diskType}
@@ -395,14 +390,14 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex gap-1">
-                            {c.specialHardware === "KVM" && <Badge className="bg-violet-50 text-violet-700">KVM</Badge>}
-                            {c.mac2 && <Badge className="bg-blue-50 text-blue-700">2 LAN</Badge>}
+                            {c.specialHardware === "KVM" && <Badge className="bg-slate-100 text-slate-700">KVM</Badge>}
+                            {c.mac2 && <Badge className="bg-slate-100 text-slate-900">2 LAN</Badge>}
                           </div>
                         </td>
                         <td className="px-4 py-3 text-right">
                           <button
                             onClick={() => setDetail(c)}
-                            className="text-xs font-medium text-slate-500 hover:text-blue-600"
+                            className="text-xs font-medium text-slate-500 hover:text-slate-900"
                           >
                             Detail
                           </button>

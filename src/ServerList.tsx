@@ -28,7 +28,7 @@ export function ServerList({ servers }: { servers: Server[] }) {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Cari client, IP, lokasi…"
-            className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-9 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-50"
+            className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-9 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
           />
           {q && (
             <button
@@ -51,7 +51,7 @@ export function ServerList({ servers }: { servers: Server[] }) {
         const items = hasil.filter((s) => s.category === cat);
         return (
           <div key={cat} className="space-y-2">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-blue-700">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-900">
               {cat} ({items.length})
             </h2>
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">

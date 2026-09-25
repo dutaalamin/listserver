@@ -39,7 +39,7 @@ export function PasswordGate({ onUnlock }: { onUnlock: (password: string) => Pro
             {error && (
               <div
                 role="alert"
-                className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-[13px] text-rose-700"
+                className="flex items-center gap-2 rounded-xl border border-slate-300 bg-slate-100 px-3 py-2 text-[13px] text-slate-800"
               >
                 <AlertCircle size={15} className="shrink-0" />
                 {error}
@@ -58,7 +58,7 @@ export function PasswordGate({ onUnlock }: { onUnlock: (password: string) => Pro
                 placeholder="Password"
                 autoFocus
                 autoComplete="current-password"
-                className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-11 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-50"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-11 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
               />
               <button
                 type="button"
@@ -73,7 +73,7 @@ export function PasswordGate({ onUnlock }: { onUnlock: (password: string) => Pro
             <button
               type="submit"
               disabled={loading || !password}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <>
