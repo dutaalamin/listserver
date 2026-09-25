@@ -6,7 +6,7 @@ import {
   Cpu, HardDrive, Usb, Shield, Wrench, LogOut,
 } from "lucide-react";
 import {
-  filterComputers, uniqueValues, summarize, EMPTY_FILTERS,
+  filterComputers, uniqueValues, EMPTY_FILTERS,
   type Computer, type Filters,
 } from "./lib";
 
@@ -25,22 +25,6 @@ function Badge({ children, className }: { children: React.ReactNode; className?:
   );
 }
 
-function Stat({ label, value, icon: Icon, tone, hint }: {
-  label: string; value: number | string; icon: typeof Monitor; tone: string; hint?: string;
-}) {
-  return (
-    <div className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-      <div className="min-w-0">
-        <p className="text-xs font-medium text-slate-500">{label}</p>
-        <p className="mt-2 text-2xl font-semibold tracking-tight tabular-nums text-slate-900">{value}</p>
-        {hint && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
-      </div>
-      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tone}`}>
-        <Icon size={19} strokeWidth={2} />
-      </span>
-    </div>
-  );
-}
 
 export function Inventory({ computers, onLogout }: { computers: Computer[]; onLogout: () => void }) {
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
@@ -51,7 +35,6 @@ export function Inventory({ computers, onLogout }: { computers: Computer[]; onLo
   const modelOptions = useMemo(() => uniqueValues(computers, (c) => c.computer), [computers]);
   const diskOptions = useMemo(() => uniqueValues(computers, (c) => c.diskType), [computers]);
   const hasil = useMemo(() => filterComputers(computers, filters), [computers, filters]);
-  const s = useMemo(() => summarize(computers), [computers]);
 
   const set = <K extends keyof Filters>(k: K, v: Filters[K]) =>
     setFilters((f) => ({ ...f, [k]: v }));
@@ -279,13 +262,6 @@ export function Inventory({ computers, onLogout }: { computers: Computer[]; onLo
       </header>
 
       <main className="mx-auto max-w-[1400px] space-y-5 px-4 py-6 sm:px-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat label="Total Komputer" value={s.total} icon={Monitor} tone="bg-blue-50 text-blue-600" />
-          <Stat label="2 Kabel LAN" value={s.dualLan} icon={Cpu} tone="bg-violet-50 text-violet-600" hint="Punya MAC #1 & #2" />
-          <Stat label="Pakai KVM" value={s.kvm} icon={HardDrive} tone="bg-amber-50 text-amber-600" />
-          <Stat label="Software Khusus" value={s.withSpecialSoftware} icon={Shield} tone="bg-emerald-50 text-emerald-600" hint="Ada software tambahan" />
-        </div>
-
         {/* Pencarian */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative min-w-[240px] flex-1">
