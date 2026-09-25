@@ -88,7 +88,7 @@ export default function App() {
                 <button
                   key={t.id}
                   onClick={() => setTab(t.id)}
-                  className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition ${
+                  className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-3 py-3 text-[13px] font-medium transition sm:px-4 sm:text-sm ${
                     aktif
                       ? "border-slate-900 text-slate-900"
                       : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"

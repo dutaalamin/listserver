@@ -18,8 +18,8 @@ export function ServerList({ servers }: { servers: Server[] }) {
   return (
     <div className="space-y-5">
       {/* Pencarian */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative min-w-[240px] flex-1">
+      <div className="space-y-2">
+        <div className="relative">
           <Search
             size={16}
             className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
@@ -54,9 +54,29 @@ export function ServerList({ servers }: { servers: Server[] }) {
             <h2 className="text-xs font-bold uppercase tracking-widest text-slate-900">
               {cat} ({items.length})
             </h2>
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+
+            {/* Mobile: kartu */}
+            <div className="space-y-2 md:hidden">
+              {items.map((s) => (
+                <div
+                  key={s.id}
+                  className="rounded-xl border border-slate-200 bg-white p-3.5"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="font-semibold text-slate-900">{s.name}</span>
+                    <span className="shrink-0 font-mono text-[13px] font-semibold tabular-nums text-slate-700">
+                      {s.ipAddress}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[13px] text-slate-500">{s.location}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop: tabel */}
+            <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)] md:block">
               <div className="overflow-x-auto">
-                <table className="w-full min-w-max border-collapse text-[13px]">
+                <table className="w-full border-collapse text-[13px]">
                   <thead>
                     <tr>
                       <th className="w-1/4 border-b border-slate-200 bg-slate-50 px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">

@@ -176,10 +176,10 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
             </div>
             <div className="divide-y divide-slate-50">
               {rows.map((r) => (
-                <div key={r.label} className="flex items-start justify-between gap-4 px-5 py-3">
-                  <span className="text-[13px] text-slate-500">{r.label}</span>
+                <div key={r.label} className="flex flex-col gap-0.5 px-5 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                  <span className="text-[12px] text-slate-500 sm:text-[13px]">{r.label}</span>
                   <span
-                    className={`text-right text-[13px] font-medium text-slate-800 ${
+                    className={`text-[13px] font-medium text-slate-800 sm:text-right ${
                       r.mono ? "font-mono tabular-nums" : ""
                     }`}
                   >
@@ -242,8 +242,8 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
   return (
     <div className="space-y-5">
         {/* Pencarian */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative min-w-[240px] flex-1">
+        <div className="space-y-3">
+          <div className="relative">
             <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               value={filters.q}
@@ -262,25 +262,27 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
             )}
           </div>
 
-          <button
-            onClick={() => setShowFilter((v) => !v)}
-            className={`inline-flex h-11 items-center gap-2 rounded-xl border px-4 text-[13px] font-medium transition ${
-              showFilter || adaFilter
-                ? "border-slate-400 bg-slate-100 text-slate-900"
-                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-            }`}
-          >
-            <SlidersHorizontal size={16} />
-            Filter
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowFilter((v) => !v)}
+              className={`inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border px-4 text-[13px] font-medium transition sm:flex-none ${
+                showFilter || adaFilter
+                  ? "border-slate-400 bg-slate-100 text-slate-900"
+                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              <SlidersHorizontal size={16} />
+              Filter
+            </button>
 
-          <button
-            onClick={exportCsv}
-            className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-medium text-slate-600 transition hover:bg-slate-50"
-          >
-            <Download size={16} />
-            Ekspor CSV
-          </button>
+            <button
+              onClick={exportCsv}
+              className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-medium text-slate-600 transition hover:bg-slate-50 sm:flex-none"
+            >
+              <Download size={16} />
+              Ekspor CSV
+            </button>
+          </div>
         </div>
 
         {showFilter && (
@@ -337,9 +339,50 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
             <h2 className="text-xs font-bold uppercase tracking-widest text-slate-900">
               {ruangan} ({items.length})
             </h2>
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+
+            {/* Mobile: kartu */}
+            <div className="space-y-2 md:hidden">
+              {items.map((c) => (
+                <div key={c.no} className="rounded-xl border border-slate-200 bg-white p-3.5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-slate-900">
+                        {c.hostname ?? "—"}
+                      </p>
+                      <p className="truncate font-mono text-[12px] text-slate-500">
+                        {c.username ?? "—"}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setDetail(c)}
+                      className="shrink-0 font-mono text-[13px] font-semibold tabular-nums text-slate-900 underline decoration-slate-300 underline-offset-2"
+                    >
+                      {c.ip}
+                    </button>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-slate-500">
+                    <span>{c.computer}</span>
+                    <span>{c.osVersion}</span>
+                    <span>{c.diskType} {c.diskCapacity}</span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-2">
+                    {c.specialHardware === "KVM" && <Badge>KVM</Badge>}
+                    {c.mac2 && <Badge>2 LAN</Badge>}
+                    <button
+                      onClick={() => setDetail(c)}
+                      className="ml-auto text-xs font-medium text-slate-500"
+                    >
+                      Detail →
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop: tabel */}
+            <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)] md:block">
               <div className="w-full overflow-x-auto">
-                <table className="w-full min-w-max border-collapse text-[13px]">
+                <table className="w-full border-collapse text-[13px]">
                   <thead>
                     <tr>
                       {["No", "Hostname", "Username", "IP Address", "MAC Address", "Komputer", "Monitor", "OS", "Disk", "Fitur", ""].map((h, i) => (
