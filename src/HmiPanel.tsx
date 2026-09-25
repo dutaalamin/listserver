@@ -4,11 +4,13 @@ import { useMemo, useState } from "react";
 import {
   Search, X, SlidersHorizontal, Download, ArrowLeft,
   Monitor, Cpu, HardDrive, Usb, Shield, Wrench,
+  Pencil, Check, Loader2, AlertCircle,
 } from "lucide-react";
 import {
   filterComputers, uniqueValues, EMPTY_HMI_FILTERS,
   type Computer, type HmiFilters,
 } from "./lib";
+import { saveComputer } from "./api";
 
 const osTone = () => "bg-slate-100 text-slate-700";
 
@@ -21,10 +23,22 @@ function Badge({ children, className }: { children: React.ReactNode; className?:
 }
 
 
-export function HmiPanel({ computers }: { computers: Computer[] }) {
+export function HmiPanel({
+  computers,
+  password,
+  onSaved,
+}: {
+  computers: Computer[];
+  password: string;
+  onSaved: (c: Computer) => void;
+}) {
   const [filters, setFilters] = useState<HmiFilters>(EMPTY_HMI_FILTERS);
   const [showFilter, setShowFilter] = useState(false);
   const [detail, setDetail] = useState<Computer | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [pesan, setPesan] = useState<{ tipe: "ok" | "err"; teks: string } | null>(null);
 
   const osOptions = useMemo(() => uniqueValues(computers, (c) => c.osVersion), [computers]);
   const modelOptions = useMemo(() => uniqueValues(computers, (c) => c.computer), [computers]);
@@ -82,41 +96,93 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
 
   // ============================ Detail ============================
   if (detail) {
-    const rows: { label: string; value: string; mono?: boolean }[] = [
-      { label: "Lokasi", value: detail.location ?? "—" },
-      { label: "Ruangan", value: detail.room ?? "—" },
-      { label: "Hostname", value: detail.hostname ?? "—", mono: true },
-      { label: "Username", value: detail.username ?? "—", mono: true },
-      { label: "Password", value: detail.password, mono: true },
-      { label: "IP Address", value: detail.ip, mono: true },
-      { label: "MAC Address #1", value: detail.mac1, mono: true },
-      { label: "MAC Address #2", value: detail.mac2 ?? "—", mono: true },
-      { label: "Komputer / CPU", value: detail.computer },
-      { label: "Display Output", value: detail.displayOutput },
-      { label: "Monitor", value: detail.monitor },
-      { label: "Display Input", value: detail.monitorInput },
-      { label: "Jumlah USB", value: `${detail.usbQty} port` },
-      { label: "USB Terpakai", value: `${detail.usbUsage} port` },
-      { label: "OS Block", value: String(detail.osBlock) },
-      { label: "Antivirus", value: detail.antivirus },
-      { label: "Sistem Operasi", value: detail.osVersion },
-      { label: "Framework", value: detail.framework },
-      { label: "Jumlah Disk", value: `${detail.diskQty} unit` },
-      { label: "Jenis Disk", value: detail.diskType },
-      { label: "Kapasitas Disk", value: detail.diskCapacity },
-      { label: "Software Khusus", value: detail.specialSoftware ?? "—" },
-      { label: "Hardware Khusus", value: detail.specialHardware ?? "—" },
+    const rows: { key: string; label: string; value: string; mono?: boolean }[] = [
+      { key: "location", label: "Lokasi", value: detail.location ?? "—" },
+      { key: "room", label: "Ruangan", value: detail.room ?? "—" },
+      { key: "hostname", label: "Hostname", value: detail.hostname ?? "—", mono: true },
+      { key: "username", label: "Username", value: detail.username ?? "—", mono: true },
+      { key: "password", label: "Password", value: detail.password, mono: true },
+      { key: "ip", label: "IP Address", value: detail.ip, mono: true },
+      { key: "mac1", label: "MAC Address #1", value: detail.mac1, mono: true },
+      { key: "mac2", label: "MAC Address #2", value: detail.mac2 ?? "—", mono: true },
+      { key: "computer", label: "Komputer / CPU", value: detail.computer },
+      { key: "displayOutput", label: "Display Output", value: detail.displayOutput },
+      { key: "monitor", label: "Monitor", value: detail.monitor },
+      { key: "monitorInput", label: "Display Input", value: detail.monitorInput },
+      { key: "usbQty", label: "Jumlah USB", value: `${detail.usbQty} port` },
+      { key: "usbUsage", label: "USB Terpakai", value: `${detail.usbUsage} port` },
+      { key: "osBlock", label: "OS Block", value: String(detail.osBlock) },
+      { key: "antivirus", label: "Antivirus", value: detail.antivirus },
+      { key: "osVersion", label: "Sistem Operasi", value: detail.osVersion },
+      { key: "framework", label: "Framework", value: detail.framework },
+      { key: "diskQty", label: "Jumlah Disk", value: `${detail.diskQty} unit` },
+      { key: "diskType", label: "Jenis Disk", value: detail.diskType },
+      { key: "diskCapacity", label: "Kapasitas Disk", value: detail.diskCapacity },
+      { key: "specialSoftware", label: "Software Khusus", value: detail.specialSoftware ?? "—" },
+      { key: "specialHardware", label: "Hardware Khusus", value: detail.specialHardware ?? "—" },
     ];
+
+    /** Isi draft dari data terbaru. */
+    function mulaiEdit() {
+      const d: Record<string, string> = {};
+      for (const r of rows) {
+        d[r.key] = String((detail as unknown as Record<string, unknown>)[r.key] ?? "");
+      }
+      setDraft(d);
+      setPesan(null);
+      setEditing(true);
+    }
+
+    async function simpan() {
+      setSaving(true);
+      setPesan(null);
+      try {
+        const updated = await saveComputer(password, detail!.no, draft as Partial<Computer>);
+        onSaved(updated);
+        setDetail(updated);
+        setEditing(false);
+        setPesan({ tipe: "ok", teks: "Perubahan tersimpan." });
+      } catch (err) {
+        setPesan({
+          tipe: "err",
+          teks: err instanceof Error ? err.message : "Gagal menyimpan.",
+        });
+      } finally {
+        setSaving(false);
+      }
+    }
+
+    const inputCls =
+      "h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-[13px] text-slate-800 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200";
 
     return (
       <div className="space-y-5">
         <button
-          onClick={() => setDetail(null)}
+          onClick={() => {
+            setDetail(null);
+            setEditing(false);
+            setPesan(null);
+          }}
           className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-900"
         >
           <ArrowLeft size={16} />
           Kembali ke daftar
         </button>
+
+        {pesan && (
+          <div
+            role="alert"
+            className={`flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-[13px] ${
+              pesan.tipe === "ok"
+                ? "border-slate-300 bg-slate-100 text-slate-800"
+                : "border-slate-400 bg-slate-200 text-slate-900"
+            }`}
+          >
+            {pesan.tipe === "ok" ? <Check size={15} /> : <AlertCircle size={15} />}
+            {pesan.teks}
+          </div>
+        )}
+
         <div className="space-y-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -128,97 +194,157 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
               </h1>
               <p className="mt-1 text-sm text-slate-500">{detail.computer}</p>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Badge className={osTone()}>{detail.osVersion}</Badge>
               {detail.specialHardware === "KVM" && (
                 <Badge className="bg-slate-100 text-slate-700">KVM</Badge>
               )}
               {detail.mac2 && <Badge className="bg-slate-100 text-slate-700">2 Kabel LAN</Badge>}
+              {!editing && (
+                <button
+                  onClick={mulaiEdit}
+                  className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3.5 text-[13px] font-medium text-slate-700 transition hover:bg-slate-50"
+                >
+                  <Pencil size={15} />
+                  Edit
+                </button>
+              )}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-900">
-                <Cpu size={19} />
-              </span>
-              <div>
-                <p className="text-xs text-slate-500">Processor / PC</p>
-                <p className="text-sm font-semibold text-slate-800">{detail.computer}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-                <HardDrive size={19} />
-              </span>
-              <div>
-                <p className="text-xs text-slate-500">Penyimpanan</p>
-                <p className="text-sm font-semibold text-slate-800">
-                  {detail.diskType} · {detail.diskCapacity}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-                <Monitor size={19} />
-              </span>
-              <div>
-                <p className="text-xs text-slate-500">Monitor</p>
-                <p className="text-sm font-semibold text-slate-800">{detail.monitor}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-            <div className="flex items-center gap-2 border-b border-slate-100 px-5 py-4">
-              <Wrench size={16} className="text-slate-500" />
-              <h2 className="text-sm font-semibold text-slate-800">Spesifikasi Lengkap</h2>
-            </div>
-            <div className="divide-y divide-slate-50">
-              {rows.map((r) => (
-                <div key={r.label} className="flex flex-col gap-0.5 px-5 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-                  <span className="text-[12px] text-slate-500 sm:text-[13px]">{r.label}</span>
-                  <span
-                    className={`text-[13px] font-medium text-slate-800 sm:text-right ${
-                      r.mono ? "font-mono tabular-nums" : ""
-                    }`}
-                  >
-                    {r.value}
+          {!editing && (
+            <>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-900">
+                    <Cpu size={19} />
                   </span>
+                  <div>
+                    <p className="text-xs text-slate-500">Processor / PC</p>
+                    <p className="text-sm font-semibold text-slate-800">{detail.computer}</p>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                    <HardDrive size={19} />
+                  </span>
+                  <div>
+                    <p className="text-xs text-slate-500">Penyimpanan</p>
+                    <p className="text-sm font-semibold text-slate-800">
+                      {detail.diskType} · {detail.diskCapacity}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                    <Monitor size={19} />
+                  </span>
+                  <div>
+                    <p className="text-xs text-slate-500">Monitor</p>
+                    <p className="text-sm font-semibold text-slate-800">{detail.monitor}</p>
+                  </div>
+                </div>
+              </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-                <Usb size={19} />
-              </span>
-              <div>
-                <p className="text-sm font-semibold text-slate-800">Port USB</p>
-                <p className="mt-0.5 text-[13px] text-slate-500">
-                  {detail.usbQty} port tersedia, {detail.usbUsage} terpakai
-                </p>
+              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                <div className="flex items-center gap-2 border-b border-slate-100 px-5 py-4">
+                  <Wrench size={16} className="text-slate-500" />
+                  <h2 className="text-sm font-semibold text-slate-800">Spesifikasi Lengkap</h2>
+                </div>
+                <div className="divide-y divide-slate-50">
+                  {rows.map((r) => (
+                    <div key={r.label} className="flex flex-col gap-0.5 px-5 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                      <span className="text-[12px] text-slate-500 sm:text-[13px]">{r.label}</span>
+                      <span
+                        className={`text-[13px] font-medium text-slate-800 sm:text-right ${
+                          r.mono ? "font-mono tabular-nums" : ""
+                        }`}
+                      >
+                        {r.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                    <Usb size={19} />
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">Port USB</p>
+                    <p className="mt-0.5 text-[13px] text-slate-500">
+                      {detail.usbQty} port tersedia, {detail.usbUsage} terpakai
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                    <Shield size={19} />
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">Keamanan</p>
+                    <p className="mt-0.5 text-[13px] text-slate-500">
+                      Antivirus {detail.antivirus} · Framework {detail.framework}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {editing && (
+            <div className="overflow-hidden rounded-2xl border border-slate-300 bg-white">
+              <div className="flex items-center gap-2 border-b border-slate-100 px-5 py-4">
+                <Pencil size={16} className="text-slate-500" />
+                <h2 className="text-sm font-semibold text-slate-800">Edit Data</h2>
+              </div>
+              <div className="grid grid-cols-1 gap-x-5 gap-y-4 p-5 sm:grid-cols-2">
+                {rows.map((r) => (
+                  <div key={r.key} className={r.key === "monitor" || r.key === "location" ? "sm:col-span-2" : ""}>
+                    <label className="mb-1.5 block text-[12px] font-medium text-slate-500">
+                      {r.label}
+                    </label>
+                    <input
+                      value={draft[r.key] ?? ""}
+                      onChange={(e) => setDraft((d) => ({ ...d, [r.key]: e.target.value }))}
+                      className={`${inputCls} ${r.mono ? "font-mono" : ""}`}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center justify-end gap-2 border-t border-slate-100 bg-slate-50 px-5 py-3.5">
+                <button
+                  onClick={() => {
+                    setEditing(false);
+                    setPesan(null);
+                  }}
+                  disabled={saving}
+                  className="inline-flex h-9 items-center rounded-xl border border-slate-300 bg-white px-4 text-[13px] font-medium text-slate-600 transition hover:bg-slate-100 disabled:opacity-50"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={simpan}
+                  disabled={saving}
+                  className="inline-flex h-9 items-center gap-2 rounded-xl bg-slate-900 px-4 text-[13px] font-medium text-white transition hover:bg-slate-800 disabled:opacity-50"
+                >
+                  {saving ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
+                  {saving ? "Menyimpan…" : "Simpan"}
+                </button>
               </div>
             </div>
-            <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-                <Shield size={19} />
-              </span>
-              <div>
-                <p className="text-sm font-semibold text-slate-800">Keamanan</p>
-                <p className="mt-0.5 text-[13px] text-slate-500">
-                  Antivirus {detail.antivirus} · Framework {detail.framework}
-                </p>
-              </div>
-            </div>
-          </div>
+          )}
 
           <div className="flex justify-between pb-4">
             {detail.no > 1 ? (
               <button
-                onClick={() => setDetail(computers.find((c) => c.no === detail.no - 1) ?? null)}
+                onClick={() => {
+                  setDetail(computers.find((c) => c.no === detail.no - 1) ?? null);
+                  setEditing(false);
+                  setPesan(null);
+                }}
                 className="text-sm font-medium text-slate-900 hover:underline"
               >
                 ← #{detail.no - 1}
@@ -226,7 +352,11 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
             ) : <span />}
             {detail.no < computers.length ? (
               <button
-                onClick={() => setDetail(computers.find((c) => c.no === detail.no + 1) ?? null)}
+                onClick={() => {
+                  setDetail(computers.find((c) => c.no === detail.no + 1) ?? null);
+                  setEditing(false);
+                  setPesan(null);
+                }}
                 className="text-sm font-medium text-slate-900 hover:underline"
               >
                 #{detail.no + 1} →

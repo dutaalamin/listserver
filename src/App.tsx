@@ -12,12 +12,14 @@ type Tab = "server" | "hmi";
 
 export default function App() {
   const [data, setData] = useState<{ servers: ServerItem[]; hmi: Computer[] } | null>(null);
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("server");
 
   const unlock = useCallback(async (password: string) => {
     const d = await fetchPortalData(password);
     setData(d);
+    setPassword(password);
     try {
       sessionStorage.setItem(KEY, password);
     } catch {
@@ -42,7 +44,10 @@ export default function App() {
 
     fetchPortalData(saved)
       .then((d) => {
-        if (!cancelled) setData(d);
+        if (!cancelled) {
+          setData(d);
+          setPassword(saved);
+        }
       })
       .catch(() => {
         try {
@@ -115,7 +120,20 @@ export default function App() {
         {tab === "server" ? (
           <ServerList servers={data.servers} />
         ) : (
-          <HmiPanel computers={data.hmi} />
+          <HmiPanel
+            computers={data.hmi}
+            password={password}
+            onSaved={(updated) =>
+              setData((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      hmi: prev.hmi.map((c) => (c.no === updated.no ? updated : c)),
+                    }
+                  : prev,
+              )
+            }
+          />
         )}
       </main>
     </div>

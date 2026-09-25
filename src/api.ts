@@ -34,3 +34,28 @@ export async function fetchPortalData(
   const json = (await res.json()) as { servers: ServerItem[]; hmi: Computer[] };
   return { servers: json.servers, hmi: json.hmi };
 }
+
+/** Simpan perubahan satu komputer HMI. Mengembalikan data terbaru dari server. */
+export async function saveComputer(
+  password: string,
+  no: number,
+  patch: Partial<Computer>,
+): Promise<Computer> {
+  const res = await fetch("/api/update", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password, no, patch }),
+  });
+
+  const j = (await res.json().catch(() => ({}))) as {
+    error?: string;
+    computer?: Computer;
+  };
+
+  if (res.status === 401) throw new Error("Password salah — sesi mungkin habis.");
+  if (res.status === 429) throw new Error(j.error ?? "Terlalu banyak percobaan.");
+  if (!res.ok) throw new Error(j.error ?? "Gagal menyimpan.");
+  if (!j.computer) throw new Error("Server tidak mengembalikan data.");
+
+  return j.computer;
+}

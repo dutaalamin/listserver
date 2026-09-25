@@ -31,3 +31,5 @@ api/_computers.json
 # env
 .env
 .env.local
+
+.env*
