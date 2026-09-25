@@ -76,13 +76,18 @@ export function ServerList({ servers }: { servers: Server[] }) {
             {/* Desktop: tabel */}
             <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)] md:block">
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-[13px]">
+                <table className="w-full table-fixed border-collapse text-[13px]">
+                  <colgroup>
+                    <col style={{ width: "26%" }} />
+                    <col style={{ width: "24%" }} />
+                    <col style={{ width: "50%" }} />
+                  </colgroup>
                   <thead>
                     <tr>
-                      <th className="w-1/4 border-b border-slate-200 bg-slate-50 px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                      <th className="border-b border-slate-200 bg-slate-50 px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                         Client
                       </th>
-                      <th className="w-1/3 border-b border-slate-200 bg-slate-50 px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                      <th className="border-b border-slate-200 bg-slate-50 px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                         IP Address
                       </th>
                       <th className="border-b border-slate-200 bg-slate-50 px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
@@ -93,11 +98,11 @@ export function ServerList({ servers }: { servers: Server[] }) {
                   <tbody className="divide-y divide-slate-100">
                     {items.map((s) => (
                       <tr key={s.id} className="transition hover:bg-slate-50">
-                        <td className="px-4 py-3 font-semibold text-slate-900">{s.name}</td>
-                        <td className="px-4 py-3 font-mono font-semibold tabular-nums text-slate-700">
+                        <td className="truncate px-4 py-3 font-semibold text-slate-900">{s.name}</td>
+                        <td className="truncate px-4 py-3 font-mono font-semibold tabular-nums text-slate-700">
                           {s.ipAddress}
                         </td>
-                        <td className="px-4 py-3 text-slate-600">{s.location}</td>
+                        <td className="truncate px-4 py-3 text-slate-600">{s.location}</td>
                       </tr>
                     ))}
                   </tbody>

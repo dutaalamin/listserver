@@ -382,13 +382,26 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
             {/* Desktop: tabel */}
             <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)] md:block">
               <div className="w-full overflow-x-auto">
-                <table className="w-full border-collapse text-[13px]">
+                <table className="w-full table-fixed border-collapse text-[13px]" style={{ minWidth: 1320 }}>
+                  <colgroup>
+                    <col style={{ width: 50 }} />
+                    <col style={{ width: 140 }} />
+                    <col style={{ width: 120 }} />
+                    <col style={{ width: 145 }} />
+                    <col style={{ width: 185 }} />
+                    <col style={{ width: 140 }} />
+                    <col style={{ width: 175 }} />
+                    <col style={{ width: 140 }} />
+                    <col style={{ width: 90 }} />
+                    <col style={{ width: 75 }} />
+                    <col style={{ width: 60 }} />
+                  </colgroup>
                   <thead>
                     <tr>
                       {["No", "Hostname", "Username", "IP Address", "MAC Address", "Komputer", "Monitor", "OS", "Disk", "Fitur", ""].map((h, i) => (
                         <th
                           key={h + i}
-                          className={`whitespace-nowrap border-b border-slate-200 bg-slate-50 px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 ${
+                          className={`whitespace-nowrap border-b border-slate-200 bg-slate-50 px-3 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 ${
                             i === 10 ? "text-right" : "text-left"
                           }`}
                         >
@@ -400,12 +413,12 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
                   <tbody className="divide-y divide-slate-100">
                     {items.map((c) => (
                       <tr key={c.no} className="transition hover:bg-slate-50">
-                        <td className="px-4 py-3 tabular-nums text-slate-400">{c.no}</td>
-                        <td className="px-4 py-3 font-semibold text-slate-900">{c.hostname ?? "—"}</td>
-                        <td className="px-4 py-3 font-mono text-[12px] text-slate-600">
+                        <td className="truncate px-3 py-3 tabular-nums text-slate-400">{c.no}</td>
+                        <td className="truncate px-3 py-3 font-semibold text-slate-900">{c.hostname ?? "—"}</td>
+                        <td className="truncate px-3 py-3 font-mono text-[12px] text-slate-600">
                           {c.username ?? "—"}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="truncate px-3 py-3">
                           <button
                             onClick={() => setDetail(c)}
                             className="font-medium tabular-nums text-slate-900 hover:underline"
@@ -413,31 +426,31 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
                             {c.ip}
                           </button>
                         </td>
-                        <td className="px-4 py-3">
-                          <div className="font-mono text-[12px] tabular-nums text-slate-600">
+                        <td className="px-3 py-3">
+                          <div className="truncate font-mono text-[12px] tabular-nums text-slate-600">
                             {c.mac1}
-                            {c.mac2 && <div className="text-slate-400">{c.mac2}</div>}
+                            {c.mac2 && <div className="truncate text-slate-400">{c.mac2}</div>}
                           </div>
                         </td>
-                        <td className="px-4 py-3 font-medium text-slate-800">{c.computer}</td>
-                        <td className="px-4 py-3 text-slate-600">
-                          {c.monitor}
-                          <div className="text-[11px] text-slate-400">{c.displayOutput} → {c.monitorInput}</div>
+                        <td className="truncate px-3 py-3 font-medium text-slate-800">{c.computer}</td>
+                        <td className="px-3 py-3 text-slate-600">
+                          <div className="truncate">{c.monitor}</div>
+                          <div className="truncate text-[11px] text-slate-400">{c.displayOutput} → {c.monitorInput}</div>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-3">
                           <Badge className={osTone()}>{c.osVersion}</Badge>
                         </td>
-                        <td className="px-4 py-3 text-slate-600">
+                        <td className="truncate px-3 py-3 text-slate-600">
                           {c.diskType}
-                          <div className="text-[11px] text-slate-400">{c.diskCapacity}</div>
+                          <div className="truncate text-[11px] text-slate-400">{c.diskCapacity}</div>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-3">
                           <div className="flex gap-1">
                             {c.specialHardware === "KVM" && <Badge className="bg-slate-100 text-slate-700">KVM</Badge>}
                             {c.mac2 && <Badge className="bg-slate-100 text-slate-900">2 LAN</Badge>}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-3 py-3 text-right">
                           <button
                             onClick={() => setDetail(c)}
                             className="text-xs font-medium text-slate-500 hover:text-slate-900"
