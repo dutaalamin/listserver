@@ -470,10 +470,14 @@ export function HmiPanel({
               {ruangan} ({items.length})
             </h2>
 
-            {/* Mobile: kartu */}
+            {/* Mobile: kartu — seluruh kartu bisa diklik */}
             <div className="space-y-2 md:hidden">
               {items.map((c) => (
-                <div key={c.no} className="rounded-xl border border-slate-200 bg-white p-3.5">
+                <button
+                  key={c.no}
+                  onClick={() => setDetail(c)}
+                  className="block w-full rounded-xl border border-slate-200 bg-white p-3.5 text-left transition active:bg-slate-50"
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate font-semibold text-slate-900">
@@ -483,12 +487,9 @@ export function HmiPanel({
                         {c.username ?? "—"}
                       </p>
                     </div>
-                    <button
-                      onClick={() => setDetail(c)}
-                      className="shrink-0 font-mono text-[13px] font-semibold tabular-nums text-slate-900 underline decoration-slate-300 underline-offset-2"
-                    >
+                    <span className="shrink-0 font-mono text-[13px] font-semibold tabular-nums text-slate-900 underline decoration-slate-300 underline-offset-2">
                       {c.ip}
-                    </button>
+                    </span>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-slate-500">
                     <span>{c.computer}</span>
@@ -498,14 +499,9 @@ export function HmiPanel({
                   <div className="mt-2 flex items-center gap-2">
                     {c.specialHardware === "KVM" && <Badge>KVM</Badge>}
                     {c.mac2 && <Badge>2 LAN</Badge>}
-                    <button
-                      onClick={() => setDetail(c)}
-                      className="ml-auto text-xs font-medium text-slate-500"
-                    >
-                      Detail →
-                    </button>
+                    <span className="ml-auto text-xs font-medium text-slate-500">Detail →</span>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
 

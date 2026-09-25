@@ -35,6 +35,36 @@ export async function fetchPortalData(
   return { servers: json.servers, hmi: json.hmi };
 }
 
+/** Simpan (tambah/ubah) atau hapus server. Mengembalikan daftar terbaru. */
+export async function saveServer(
+  password: string,
+  server: Partial<ServerItem> & { id?: number },
+): Promise<ServerItem[]> {
+  const res = await fetch("/api/server", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password, action: "save", server }),
+  });
+  const j = (await res.json().catch(() => ({}))) as { error?: string; servers?: ServerItem[] };
+  if (res.status === 401) throw new Error("Password salah — sesi mungkin habis.");
+  if (res.status === 429) throw new Error(j.error ?? "Terlalu banyak percobaan.");
+  if (!res.ok) throw new Error(j.error ?? "Gagal menyimpan.");
+  return j.servers ?? [];
+}
+
+export async function deleteServer(password: string, id: number): Promise<ServerItem[]> {
+  const res = await fetch("/api/server", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password, action: "delete", id }),
+  });
+  const j = (await res.json().catch(() => ({}))) as { error?: string; servers?: ServerItem[] };
+  if (res.status === 401) throw new Error("Password salah — sesi mungkin habis.");
+  if (res.status === 429) throw new Error(j.error ?? "Terlalu banyak percobaan.");
+  if (!res.ok) throw new Error(j.error ?? "Gagal menghapus.");
+  return j.servers ?? [];
+}
+
 /** Simpan perubahan satu komputer HMI. Mengembalikan data terbaru dari server. */
 export async function saveComputer(
   password: string,

@@ -118,7 +118,13 @@ export default function App() {
       {/* Isi */}
       <main className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6">
         {tab === "server" ? (
-          <ServerList servers={data.servers} />
+          <ServerList
+            servers={data.servers}
+            password={password}
+            onChanged={(list) =>
+              setData((prev) => (prev ? { ...prev, servers: list } : prev))
+            }
+          />
         ) : (
           <HmiPanel
             computers={data.hmi}
