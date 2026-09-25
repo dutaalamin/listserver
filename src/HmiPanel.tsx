@@ -330,11 +330,11 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
             <table className="w-full min-w-max border-collapse text-[13px]">
               <thead>
                 <tr>
-                  {["No", "Hostname", "IP Address", "MAC Address", "Ruangan", "Komputer", "Monitor", "OS", "Disk", "Fitur", ""].map((h, i) => (
+                  {["No", "Hostname", "Username", "IP Address", "MAC Address", "Ruangan", "Komputer", "Monitor", "OS", "Disk", "Fitur", ""].map((h, i) => (
                     <th
                       key={h + i}
                       className={`whitespace-nowrap border-b border-slate-200 bg-slate-50 px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 ${
-                        i === 10 ? "text-right" : "text-left"
+                        i === 11 ? "text-right" : "text-left"
                       }`}
                     >
                       {h}
@@ -345,7 +345,7 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
               <tbody>
                 {hasil.length === 0 && (
                   <tr>
-                    <td colSpan={11} className="px-4 py-14 text-center text-sm text-slate-400">
+                    <td colSpan={12} className="px-4 py-14 text-center text-sm text-slate-400">
                       Tidak ada komputer yang cocok dengan pencarian.
                     </td>
                   </tr>
@@ -355,6 +355,9 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
                     <td className="border-b border-slate-100 px-4 py-3 tabular-nums text-slate-400">{c.no}</td>
                     <td className="border-b border-slate-100 px-4 py-3 font-semibold text-slate-900">
                       {c.hostname ?? "—"}
+                    </td>
+                    <td className="border-b border-slate-100 px-4 py-3 font-mono text-[12px] text-slate-600">
+                      {c.username ?? "—"}
                     </td>
                     <td className="border-b border-slate-100 px-4 py-3">
                       <button
