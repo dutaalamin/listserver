@@ -65,6 +65,37 @@ export async function deleteServer(password: string, id: number): Promise<Server
   return j.servers ?? [];
 }
 
+/** Tambah komputer HMI baru. Mengembalikan seluruh daftar HMI terbaru. */
+export async function addComputer(
+  password: string,
+  computer: Partial<Computer>,
+): Promise<Computer[]> {
+  const res = await fetch("/api/hmi", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password, action: "add", computer }),
+  });
+  const j = (await res.json().catch(() => ({}))) as { error?: string; hmi?: Computer[] };
+  if (res.status === 401) throw new Error("Password salah — sesi mungkin habis.");
+  if (res.status === 429) throw new Error(j.error ?? "Terlalu banyak percobaan.");
+  if (!res.ok) throw new Error(j.error ?? "Gagal menambah.");
+  return j.hmi ?? [];
+}
+
+/** Hapus komputer HMI. Mengembalikan seluruh daftar HMI terbaru. */
+export async function deleteComputer(password: string, no: number): Promise<Computer[]> {
+  const res = await fetch("/api/hmi", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password, action: "delete", no }),
+  });
+  const j = (await res.json().catch(() => ({}))) as { error?: string; hmi?: Computer[] };
+  if (res.status === 401) throw new Error("Password salah — sesi mungkin habis.");
+  if (res.status === 429) throw new Error(j.error ?? "Terlalu banyak percobaan.");
+  if (!res.ok) throw new Error(j.error ?? "Gagal menghapus.");
+  return j.hmi ?? [];
+}
+
 /** Simpan perubahan satu komputer HMI. Mengembalikan data terbaru dari server. */
 export async function saveComputer(
   password: string,

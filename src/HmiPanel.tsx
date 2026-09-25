@@ -4,13 +4,13 @@ import { useMemo, useState } from "react";
 import {
   Search, X, SlidersHorizontal, Download, ArrowLeft,
   Monitor, Cpu, HardDrive, Usb, Shield, Wrench,
-  Pencil, Check, Loader2, AlertCircle,
+  Pencil, Check, Loader2, AlertCircle, Plus, Trash2,
 } from "lucide-react";
 import {
   filterComputers, uniqueValues, EMPTY_HMI_FILTERS,
   type Computer, type HmiFilters,
 } from "./lib";
-import { saveComputer } from "./api";
+import { saveComputer, addComputer, deleteComputer } from "./api";
 
 const osTone = () => "bg-slate-100 text-slate-700";
 
@@ -27,10 +27,12 @@ export function HmiPanel({
   computers,
   password,
   onSaved,
+  onChanged,
 }: {
   computers: Computer[];
   password: string;
   onSaved: (c: Computer) => void;
+  onChanged: (list: Computer[]) => void;
 }) {
   const [filters, setFilters] = useState<HmiFilters>(EMPTY_HMI_FILTERS);
   const [showFilter, setShowFilter] = useState(false);
@@ -39,6 +41,7 @@ export function HmiPanel({
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [pesan, setPesan] = useState<{ tipe: "ok" | "err"; teks: string } | null>(null);
+  const [tambah, setTambah] = useState<Record<string, string> | null>(null);
 
   const osOptions = useMemo(() => uniqueValues(computers, (c) => c.osVersion), [computers]);
   const modelOptions = useMemo(() => uniqueValues(computers, (c) => c.computer), [computers]);
@@ -63,6 +66,38 @@ export function HmiPanel({
   const adaFilter = Boolean(
     filters.q || filters.osVersion || filters.computer || filters.diskType || filters.feature,
   );
+
+  async function simpanTambah() {
+    if (!tambah) return;
+    setSaving(true);
+    setPesan(null);
+    try {
+      const list = await addComputer(password, tambah as Partial<Computer>);
+      onChanged(list);
+      setTambah(null);
+      setPesan({ tipe: "ok", teks: "Komputer baru ditambahkan." });
+    } catch (err) {
+      setPesan({ tipe: "err", teks: err instanceof Error ? err.message : "Gagal menambah." });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function hapusHmi(c: Computer) {
+    if (!confirm(`Hapus "${c.hostname ?? c.ip}" dari daftar HMI?`)) return;
+    setSaving(true);
+    setPesan(null);
+    try {
+      const list = await deleteComputer(password, c.no);
+      onChanged(list);
+      setDetail(null);
+      setPesan({ tipe: "ok", teks: "Komputer dihapus." });
+    } catch (err) {
+      setPesan({ tipe: "err", teks: err instanceof Error ? err.message : "Gagal menghapus." });
+    } finally {
+      setSaving(false);
+    }
+  }
 
   function exportCsv() {
     const headers = [
@@ -93,6 +128,9 @@ export function HmiPanel({
 
   const selectCls =
     "h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-100";
+
+  const inputCls =
+    "h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-[13px] text-slate-800 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200";
 
   // ============================ Detail ============================
   if (detail) {
@@ -152,9 +190,6 @@ export function HmiPanel({
       }
     }
 
-    const inputCls =
-      "h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-[13px] text-slate-800 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200";
-
     return (
       <div className="space-y-5">
         <button
@@ -209,6 +244,14 @@ export function HmiPanel({
                   Edit
                 </button>
               )}
+              <button
+                onClick={() => hapusHmi(detail)}
+                disabled={saving}
+                className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3.5 text-[13px] font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50"
+              >
+                <Trash2 size={15} />
+                Hapus
+              </button>
             </div>
           </div>
 
@@ -412,6 +455,41 @@ export function HmiPanel({
               <Download size={16} />
               Ekspor CSV
             </button>
+
+            <button
+              onClick={() => {
+                setTambah({
+                  hostname: "",
+                  username: "",
+                  ip: "",
+                  location: "",
+                  room: "",
+                  computer: "",
+                  monitor: "",
+                  displayOutput: "",
+                  monitorInput: "",
+                  osVersion: "",
+                  framework: "",
+                  antivirus: "",
+                  diskType: "",
+                  diskCapacity: "",
+                  specialSoftware: "",
+                  specialHardware: "",
+                  password: "",
+                  mac1: "",
+                  mac2: "",
+                  osBlock: "0",
+                  diskQty: "1",
+                  usbQty: "0",
+                  usbUsage: "0",
+                });
+                setPesan(null);
+              }}
+              className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-[13px] font-medium text-white transition hover:bg-slate-800 sm:flex-none"
+            >
+              <Plus size={16} />
+              Tambah HMI
+            </button>
           </div>
         </div>
 
@@ -445,6 +523,82 @@ export function HmiPanel({
                 <option value="kvm">Pakai KVM</option>
                 <option value="dual-lan">2 Kabel LAN</option>
               </select>
+            </div>
+          </div>
+        )}
+
+        {pesan && (
+          <div
+            role="alert"
+            className={`flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-[13px] ${
+              pesan.tipe === "ok"
+                ? "border-slate-300 bg-slate-100 text-slate-800"
+                : "border-slate-400 bg-slate-200 text-slate-900"
+            }`}
+          >
+            {pesan.tipe === "ok" ? <Check size={15} /> : <AlertCircle size={15} />}
+            {pesan.teks}
+          </div>
+        )}
+
+        {tambah && (
+          <div className="overflow-hidden rounded-2xl border border-slate-300 bg-white">
+            <div className="flex items-center gap-2 border-b border-slate-100 px-5 py-4">
+              <Plus size={16} className="text-slate-500" />
+              <h2 className="text-sm font-semibold text-slate-800">Tambah Komputer HMI</h2>
+            </div>
+            <div className="grid grid-cols-1 gap-x-5 gap-y-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                ["hostname", "Hostname *"],
+                ["username", "Username"],
+                ["ip", "IP Address *"],
+                ["location", "Lokasi"],
+                ["room", "Ruangan"],
+                ["computer", "Komputer / CPU"],
+                ["monitor", "Monitor"],
+                ["displayOutput", "Display Output"],
+                ["monitorInput", "Display Input"],
+                ["osVersion", "Sistem Operasi"],
+                ["antivirus", "Antivirus"],
+                ["framework", "Framework"],
+                ["diskType", "Jenis Disk"],
+                ["diskCapacity", "Kapasitas Disk"],
+                ["diskQty", "Jumlah Disk"],
+                ["usbQty", "Jumlah USB"],
+                ["usbUsage", "USB Terpakai"],
+                ["osBlock", "OS Block"],
+                ["password", "Password"],
+                ["mac1", "MAC Address #1"],
+                ["mac2", "MAC Address #2"],
+                ["specialSoftware", "Software Khusus"],
+                ["specialHardware", "Hardware Khusus"],
+              ].map(([key, label]) => (
+                <div key={key}>
+                  <label className="mb-1.5 block text-[12px] font-medium text-slate-500">{label}</label>
+                  <input
+                    value={tambah[key] ?? ""}
+                    onChange={(e) => setTambah((d) => (d ? { ...d, [key]: e.target.value } : d))}
+                    className={inputCls}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center justify-end gap-2 border-t border-slate-100 bg-slate-50 px-5 py-3.5">
+              <button
+                onClick={() => setTambah(null)}
+                disabled={saving}
+                className="inline-flex h-9 items-center rounded-xl border border-slate-300 bg-white px-4 text-[13px] font-medium text-slate-600 transition hover:bg-slate-100 disabled:opacity-50"
+              >
+                Batal
+              </button>
+              <button
+                onClick={simpanTambah}
+                disabled={saving}
+                className="inline-flex h-9 items-center gap-2 rounded-xl bg-slate-900 px-4 text-[13px] font-medium text-white transition hover:bg-slate-800 disabled:opacity-50"
+              >
+                {saving ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
+                {saving ? "Menyimpan…" : "Simpan"}
+              </button>
             </div>
           </div>
         )}
@@ -538,19 +692,20 @@ export function HmiPanel({
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {items.map((c) => (
-                      <tr key={c.no} className="transition hover:bg-slate-50">
-                        <td className="truncate px-3 py-3 tabular-nums text-slate-400">{c.no}</td>
+                      <tr
+                        key={c.no}
+                        onClick={() => setDetail(c)}
+                        className="cursor-pointer transition hover:bg-slate-50"
+                      >
+                        <td className="px-3 py-3 tabular-nums text-slate-400">{c.no}</td>
                         <td className="truncate px-3 py-3 font-semibold text-slate-900">{c.hostname ?? "—"}</td>
                         <td className="truncate px-3 py-3 font-mono text-[12px] text-slate-600">
                           {c.username ?? "—"}
                         </td>
-                        <td className="truncate px-3 py-3">
-                          <button
-                            onClick={() => setDetail(c)}
-                            className="font-medium tabular-nums text-slate-900 hover:underline"
-                          >
+                        <td className="px-3 py-3">
+                          <span className="font-medium tabular-nums text-slate-900">
                             {c.ip}
-                          </button>
+                          </span>
                         </td>
                         <td className="px-3 py-3">
                           <div className="truncate font-mono text-[12px] tabular-nums text-slate-600">
@@ -577,12 +732,9 @@ export function HmiPanel({
                           </div>
                         </td>
                         <td className="px-3 py-3 text-right">
-                          <button
-                            onClick={() => setDetail(c)}
-                            className="text-xs font-medium text-slate-500 hover:text-slate-900"
-                          >
-                            Detail
-                          </button>
+                          <span className="text-xs font-medium text-slate-500">
+                            Detail →
+                          </span>
                         </td>
                       </tr>
                     ))}

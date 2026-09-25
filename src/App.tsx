@@ -139,6 +139,9 @@ export default function App() {
                   : prev,
               )
             }
+            onChanged={(list) =>
+              setData((prev) => (prev ? { ...prev, hmi: list } : prev))
+            }
           />
         )}
       </main>
