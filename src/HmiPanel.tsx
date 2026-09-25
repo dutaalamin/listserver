@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from "react";
 import {
-  Search, X, SlidersHorizontal, Download, ArrowLeft, Monitor,
-  Cpu, HardDrive, Usb, Shield, Wrench, LogOut,
+  Search, X, SlidersHorizontal, Download, ArrowLeft,
+  Monitor, Cpu, HardDrive, Usb, Shield, Wrench,
 } from "lucide-react";
 import {
-  filterComputers, uniqueValues, EMPTY_FILTERS,
-  type Computer, type Filters,
+  filterComputers, uniqueValues, EMPTY_HMI_FILTERS,
+  type Computer, type HmiFilters,
 } from "./lib";
 
 const OS_TONE: Record<string, string> = {
@@ -26,8 +26,8 @@ function Badge({ children, className }: { children: React.ReactNode; className?:
 }
 
 
-export function Inventory({ computers, onLogout }: { computers: Computer[]; onLogout: () => void }) {
-  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
+export function HmiPanel({ computers }: { computers: Computer[] }) {
+  const [filters, setFilters] = useState<HmiFilters>(EMPTY_HMI_FILTERS);
   const [showFilter, setShowFilter] = useState(false);
   const [detail, setDetail] = useState<Computer | null>(null);
 
@@ -36,7 +36,7 @@ export function Inventory({ computers, onLogout }: { computers: Computer[]; onLo
   const diskOptions = useMemo(() => uniqueValues(computers, (c) => c.diskType), [computers]);
   const hasil = useMemo(() => filterComputers(computers, filters), [computers, filters]);
 
-  const set = <K extends keyof Filters>(k: K, v: Filters[K]) =>
+  const set = <K extends keyof HmiFilters>(k: K, v: HmiFilters[K]) =>
     setFilters((f) => ({ ...f, [k]: v }));
 
   const adaFilter = Boolean(
@@ -96,27 +96,15 @@ export function Inventory({ computers, onLogout }: { computers: Computer[]; onLo
     ];
 
     return (
-      <div className="min-h-screen bg-slate-50">
-        <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto flex max-w-[1000px] items-center justify-between px-4 py-4 sm:px-6">
-            <button
-              onClick={() => setDetail(null)}
-              className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-900"
-            >
-              <ArrowLeft size={16} />
-              Kembali ke daftar
-            </button>
-            <button
-              onClick={onLogout}
-              className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-[13px] font-medium text-slate-600 transition hover:bg-slate-50"
-            >
-              <LogOut size={15} />
-              Keluar
-            </button>
-          </div>
-        </header>
-
-        <main className="mx-auto max-w-[1000px] space-y-5 px-4 py-6 sm:px-6">
+      <div className="space-y-5">
+        <button
+          onClick={() => setDetail(null)}
+          className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-900"
+        >
+          <ArrowLeft size={16} />
+          Kembali ke daftar
+        </button>
+        <div className="space-y-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
@@ -232,36 +220,14 @@ export function Inventory({ computers, onLogout }: { computers: Computer[]; onLo
               </button>
             ) : <span />}
           </div>
-        </main>
+        </div>
       </div>
     );
   }
 
   // ============================ Daftar ============================
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 text-white">
-              <Monitor size={19} />
-            </span>
-            <div>
-              <h1 className="text-base font-semibold text-slate-900">Inventaris Komputer</h1>
-              <p className="text-xs text-slate-500">Plate Mill — HMI PC Specification</p>
-            </div>
-          </div>
-          <button
-            onClick={onLogout}
-            className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-[13px] font-medium text-slate-600 transition hover:bg-slate-50"
-          >
-            <LogOut size={15} />
-            Keluar
-          </button>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-[1400px] space-y-5 px-4 py-6 sm:px-6">
+    <div className="space-y-5">
         {/* Pencarian */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative min-w-[240px] flex-1">
@@ -344,7 +310,7 @@ export function Inventory({ computers, onLogout }: { computers: Computer[]; onLo
           </p>
           {adaFilter && (
             <button
-              onClick={() => setFilters(EMPTY_FILTERS)}
+              onClick={() => setFilters(EMPTY_HMI_FILTERS)}
               className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
             >
               <X size={13} />
@@ -428,10 +394,6 @@ export function Inventory({ computers, onLogout }: { computers: Computer[]; onLo
           </div>
         </div>
 
-        <p className="pb-4 text-center text-xs text-slate-400">
-          Data internal perusahaan — jangan dibagikan ke pihak luar.
-        </p>
-      </main>
     </div>
   );
 }

@@ -1,21 +1,19 @@
 /**
- * Vercel Serverless Function — sumber data inventaris.
+ * Vercel Serverless Function — sumber data portal (List Server + HMI).
  *
- * KEAMANAN (penting):
+ * KEAMANAN:
  *  1. Data TIDAK dikirim ke browser sebelum password benar.
- *  2. Data TIDAK disimpan di kode/repo, melainkan di environment variable
- *     `INVENTORY_DATA` (terenkripsi di Vercel). Jadi walau repo publik,
- *     password komputer tidak ikut bocor.
+ *  2. Data disimpan di environment variable `PORTAL_DATA` (terenkripsi di
+ *     Vercel), bukan di repo. Walau repo publik, isinya tidak bocor.
  *
  * Alur:
- *   POST { password }  ->  cocok?  ->  balas data
+ *   POST { password }  ->  cocok?  ->  balas { servers, hmi }
  *                      ->  salah?  ->  401
  */
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { timingSafeEqual } from "node:crypto";
 
-/** Bandingkan teks dengan waktu konstan (tahan timing attack). */
 function safeEqual(a: string, b: string): boolean {
   const ba = Buffer.from(a);
   const bb = Buffer.from(b);
@@ -23,7 +21,6 @@ function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(ba, bb);
 }
 
-/** Batasi percobaan agar tidak bisa ditebak paksa (brute force). */
 const attempts = new Map<string, { count: number; until: number }>();
 const MAX_ATTEMPTS = 8;
 const LOCK_MS = 5 * 60 * 1000;
@@ -59,11 +56,11 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const expected = process.env.ACCESS_PASSWORD;
-  const rawData = process.env.INVENTORY_DATA;
+  const rawData = process.env.PORTAL_DATA;
 
   if (!expected || !rawData) {
     return res.status(500).json({
-      error: "Server belum dikonfigurasi (ACCESS_PASSWORD / INVENTORY_DATA belum di-set).",
+      error: "Server belum dikonfigurasi (ACCESS_PASSWORD / PORTAL_DATA belum di-set).",
     });
   }
 
@@ -73,14 +70,14 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(401).json({ error: "Password salah." });
   }
 
-  let computers: unknown;
+  let data: unknown;
   try {
-    computers = JSON.parse(rawData);
+    data = JSON.parse(rawData);
   } catch {
-    return res.status(500).json({ error: "Format data inventaris tidak valid." });
+    return res.status(500).json({ error: "Format data tidak valid." });
   }
 
   attempts.delete(ip);
   res.setHeader("Cache-Control", "no-store");
-  return res.status(200).json({ computers });
+  return res.status(200).json(data);
 }

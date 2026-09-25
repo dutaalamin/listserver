@@ -1,3 +1,11 @@
+export interface Server {
+  id: number;
+  name: string;
+  ipAddress: string;
+  location: string;
+  category: string;
+}
+
 export interface Computer {
   no: number;
   password: string;
@@ -21,7 +29,26 @@ export interface Computer {
   specialHardware: string | null;
 }
 
-export interface Filters {
+export interface PortalData {
+  servers: Server[];
+  hmi: Computer[];
+}
+
+/** Urutan kategori sesuai tampilan list server. */
+export const CATEGORY_ORDER = [
+  "SHEARING",
+  "COMPUTER ROOM",
+  "FURNACE",
+  "FM",
+  "ACC",
+  "TECH AND PLANT",
+  "DATA CENTER (PL1)",
+  "OTHER",
+];
+
+// ============================ HMI: filter ============================
+
+export interface HmiFilters {
   q: string;
   osVersion: string;
   computer: string;
@@ -29,7 +56,7 @@ export interface Filters {
   feature: string;
 }
 
-export const EMPTY_FILTERS: Filters = {
+export const EMPTY_HMI_FILTERS: HmiFilters = {
   q: "",
   osVersion: "",
   computer: "",
@@ -37,8 +64,7 @@ export const EMPTY_FILTERS: Filters = {
   feature: "",
 };
 
-/** Kumpulkan teks yang bisa dicari dari satu komputer. */
-function haystack(c: Computer): string {
+function hmiHaystack(c: Computer): string {
   return [
     c.ip, c.mac1, c.mac2 ?? "", c.computer, c.monitor, c.osVersion,
     c.antivirus, c.diskType, c.diskCapacity, c.displayOutput, c.monitorInput,
@@ -48,10 +74,10 @@ function haystack(c: Computer): string {
     .toLowerCase();
 }
 
-export function filterComputers(items: Computer[], f: Filters): Computer[] {
+export function filterComputers(items: Computer[], f: HmiFilters): Computer[] {
   const q = f.q.trim().toLowerCase();
   return items.filter((c) => {
-    if (q && !haystack(c).includes(q)) return false;
+    if (q && !hmiHaystack(c).includes(q)) return false;
     if (f.osVersion && c.osVersion !== f.osVersion) return false;
     if (f.computer && c.computer !== f.computer) return false;
     if (f.diskType && c.diskType !== f.diskType) return false;
@@ -70,34 +96,16 @@ export function uniqueValues(items: Computer[], pick: (c: Computer) => string): 
   return [...set].sort((a, b) => a.localeCompare(b, "id"));
 }
 
-export interface Summary {
-  total: number;
-  byOs: { label: string; count: number }[];
-  byComputer: { label: string; count: number }[];
-  dualLan: number;
-  kvm: number;
-  withSpecialSoftware: number;
-}
+// ============================ List Server: filter ============================
 
-function countBy(items: Computer[], pick: (c: Computer) => string) {
-  const m = new Map<string, number>();
-  for (const c of items) {
-    const k = pick(c);
-    if (!k) continue;
-    m.set(k, (m.get(k) ?? 0) + 1);
-  }
-  return [...m.entries()]
-    .map(([label, count]) => ({ label, count }))
-    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "id"));
-}
-
-export function summarize(items: Computer[]): Summary {
-  return {
-    total: items.length,
-    byOs: countBy(items, (c) => c.osVersion),
-    byComputer: countBy(items, (c) => c.computer),
-    dualLan: items.filter((c) => c.mac2).length,
-    kvm: items.filter((c) => c.specialHardware === "KVM").length,
-    withSpecialSoftware: items.filter((c) => c.specialSoftware).length,
-  };
+export function filterServers(items: Server[], q: string): Server[] {
+  const s = q.trim().toLowerCase();
+  if (!s) return items;
+  return items.filter(
+    (x) =>
+      x.name.toLowerCase().includes(s) ||
+      x.ipAddress.toLowerCase().includes(s) ||
+      x.location.toLowerCase().includes(s) ||
+      x.category.toLowerCase().includes(s),
+  );
 }
