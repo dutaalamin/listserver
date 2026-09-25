@@ -13,6 +13,14 @@ export interface Computer {
   mac1: string;
   mac2: string | null;
   computer: string;
+  /** Lokasi utama (dari Excel). */
+  location?: string;
+  /** Ruangan / area (dari Excel). */
+  room?: string;
+  /** Hostname komputer (dari Excel). */
+  hostname?: string;
+  /** Username login Windows (dari Excel). */
+  username?: string;
   displayOutput: string;
   monitor: string;
   monitorInput: string;
@@ -69,6 +77,7 @@ function hmiHaystack(c: Computer): string {
     c.ip, c.mac1, c.mac2 ?? "", c.computer, c.monitor, c.osVersion,
     c.antivirus, c.diskType, c.diskCapacity, c.displayOutput, c.monitorInput,
     c.specialSoftware ?? "", c.specialHardware ?? "",
+    c.location ?? "", c.room ?? "", c.hostname ?? "", c.username ?? "",
   ]
     .join(" ")
     .toLowerCase();

@@ -45,12 +45,14 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
 
   function exportCsv() {
     const headers = [
-      "No", "Password", "IP Address", "MAC 1", "MAC 2", "Komputer", "Display Output",
+      "No", "Lokasi", "Ruangan", "Hostname", "Username", "Password", "IP Address",
+      "MAC 1", "MAC 2", "Komputer", "Display Output",
       "Monitor", "Display Input", "USB Qty", "USB Usage", "OS Block", "Antivirus",
       "OS", "Framework", "Disk Qty", "Disk Type", "Disk Capacity", "Software Khusus", "Hardware Khusus",
     ];
     const rows = hasil.map((c) => [
-      c.no, c.password, c.ip, c.mac1, c.mac2 ?? "", c.computer, c.displayOutput,
+      c.no, c.location ?? "", c.room ?? "", c.hostname ?? "", c.username ?? "",
+      c.password, c.ip, c.mac1, c.mac2 ?? "", c.computer, c.displayOutput,
       c.monitor, c.monitorInput, c.usbQty, c.usbUsage, c.osBlock, c.antivirus,
       c.osVersion, c.framework, c.diskQty, c.diskType, c.diskCapacity,
       c.specialSoftware ?? "", c.specialHardware ?? "",
@@ -74,6 +76,10 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
   // ============================ Detail ============================
   if (detail) {
     const rows: { label: string; value: string; mono?: boolean }[] = [
+      { label: "Lokasi", value: detail.location ?? "—" },
+      { label: "Ruangan", value: detail.room ?? "—" },
+      { label: "Hostname", value: detail.hostname ?? "—", mono: true },
+      { label: "Username", value: detail.username ?? "—", mono: true },
       { label: "Password", value: detail.password, mono: true },
       { label: "IP Address", value: detail.ip, mono: true },
       { label: "MAC Address #1", value: detail.mac1, mono: true },
@@ -324,11 +330,11 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
             <table className="w-full min-w-max border-collapse text-[13px]">
               <thead>
                 <tr>
-                  {["No", "IP Address", "MAC Address", "Komputer", "Monitor", "OS", "Disk", "Fitur", ""].map((h, i) => (
+                  {["No", "Hostname", "IP Address", "MAC Address", "Ruangan", "Komputer", "Monitor", "OS", "Disk", "Fitur", ""].map((h, i) => (
                     <th
                       key={h + i}
                       className={`whitespace-nowrap border-b border-slate-200 bg-slate-50 px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 ${
-                        i === 8 ? "text-right" : "text-left"
+                        i === 10 ? "text-right" : "text-left"
                       }`}
                     >
                       {h}
@@ -339,7 +345,7 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
               <tbody>
                 {hasil.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="px-4 py-14 text-center text-sm text-slate-400">
+                    <td colSpan={11} className="px-4 py-14 text-center text-sm text-slate-400">
                       Tidak ada komputer yang cocok dengan pencarian.
                     </td>
                   </tr>
@@ -347,6 +353,9 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
                 {hasil.map((c) => (
                   <tr key={c.no} className="transition hover:bg-slate-50">
                     <td className="border-b border-slate-100 px-4 py-3 tabular-nums text-slate-400">{c.no}</td>
+                    <td className="border-b border-slate-100 px-4 py-3 font-semibold text-slate-900">
+                      {c.hostname ?? "—"}
+                    </td>
                     <td className="border-b border-slate-100 px-4 py-3">
                       <button
                         onClick={() => setDetail(c)}
@@ -360,6 +369,10 @@ export function HmiPanel({ computers }: { computers: Computer[] }) {
                         {c.mac1}
                         {c.mac2 && <div className="text-slate-400">{c.mac2}</div>}
                       </div>
+                    </td>
+                    <td className="border-b border-slate-100 px-4 py-3 text-slate-600">
+                      {c.room ?? "—"}
+                      <div className="text-[11px] text-slate-400">{c.location ?? ""}</div>
                     </td>
                     <td className="border-b border-slate-100 px-4 py-3 font-medium text-slate-800">{c.computer}</td>
                     <td className="border-b border-slate-100 px-4 py-3 text-slate-600">
