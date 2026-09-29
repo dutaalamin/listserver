@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, Server, Monitor } from "lucide-react";
+import { Loader2, Server, Monitor, Camera } from "lucide-react";
 import { fetchPortalData, type ServerItem } from "./api";
 import type { Computer } from "./lib";
 import { PasswordGate } from "./PasswordGate";
 import { ServerList } from "./ServerList";
 import { HmiPanel } from "./HmiPanel";
+import { SpekFotoGaleri } from "./SpekFoto";
 
 const KEY = "portal_password";
 
-type Tab = "server" | "hmi";
+type Tab = "server" | "hmi" | "foto";
 
 export default function App() {
   const [data, setData] = useState<{ servers: ServerItem[]; hmi: Computer[] } | null>(null);
@@ -78,6 +79,7 @@ export default function App() {
   const TABS: { id: Tab; label: string; icon: typeof Server; count: number }[] = [
     { id: "server", label: "List Server", icon: Server, count: data.servers.length },
     { id: "hmi", label: "HMI Plate Mill", icon: Monitor, count: data.hmi.length },
+    { id: "foto", label: "Foto Spek PC", icon: Camera, count: 5 },
   ];
 
   return (
@@ -125,7 +127,7 @@ export default function App() {
               setData((prev) => (prev ? { ...prev, servers: list } : prev))
             }
           />
-        ) : (
+        ) : tab === "hmi" ? (
           <HmiPanel
             computers={data.hmi}
             password={password}
@@ -143,6 +145,8 @@ export default function App() {
               setData((prev) => (prev ? { ...prev, hmi: list } : prev))
             }
           />
+        ) : (
+          <SpekFotoGaleri />
         )}
       </main>
     </div>
