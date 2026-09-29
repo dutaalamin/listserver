@@ -120,3 +120,67 @@ export async function saveComputer(
 
   return j.computer;
 }
+
+// ============================ Foto Spek PC ============================
+
+export interface SpekFotoItem {
+  id: string;
+  nama: string;
+  url: string;
+  hostname: string;
+  ip: string;
+  model: string;
+  waktu: number;
+}
+
+async function kirimFoto(
+  body: Record<string, unknown>,
+): Promise<SpekFotoItem[]> {
+  const res = await fetch("/api/foto", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const j = (await res.json().catch(() => ({}))) as {
+    error?: string;
+    foto?: SpekFotoItem[];
+  };
+  if (res.status === 401) throw new Error("Password salah — sesi mungkin habis.");
+  if (res.status === 413) throw new Error(j.error ?? "Gambar terlalu besar.");
+  if (res.status === 429) throw new Error(j.error ?? "Terlalu banyak percobaan.");
+  if (!res.ok) throw new Error(j.error ?? "Gagal memproses foto.");
+  return j.foto ?? [];
+}
+
+/** Ambil semua foto spek PC. */
+export function listFoto(password: string): Promise<SpekFotoItem[]> {
+  return kirimFoto({ password, action: "list" });
+}
+
+/** Unggah foto baru (base64 tanpa prefix data URL). */
+export function addFoto(
+  password: string,
+  foto: {
+    hostname: string;
+    ip: string;
+    model: string;
+    gambarBase64: string;
+    mime: string;
+  },
+): Promise<SpekFotoItem[]> {
+  return kirimFoto({ password, action: "add", foto });
+}
+
+/** Ubah metadata foto. */
+export function updateFoto(
+  password: string,
+  id: string,
+  patch: { hostname?: string; ip?: string; model?: string },
+): Promise<SpekFotoItem[]> {
+  return kirimFoto({ password, action: "update", id, patch });
+}
+
+/** Hapus foto (termasuk file di blob). */
+export function deleteFoto(password: string, id: string): Promise<SpekFotoItem[]> {
+  return kirimFoto({ password, action: "delete", id });
+}

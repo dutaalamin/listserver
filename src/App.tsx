@@ -146,7 +146,7 @@ export default function App() {
             }
           />
         ) : (
-          <SpekFotoGaleri />
+          <SpekFotoGaleri password={password} />
         )}
       </main>
     </div>
