@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import {
   Search, X, SlidersHorizontal, Download, ArrowLeft,
   Monitor, Cpu, HardDrive, Usb, Shield, Wrench,
-  Pencil, Check, Loader2, AlertCircle, Plus, Trash2,
+  Pencil, Check, Loader2, AlertCircle, Plus, Trash2, ChevronRight,
 } from "lucide-react";
 import {
   filterComputers, uniqueValues, EMPTY_HMI_FILTERS,
@@ -661,86 +661,108 @@ export function HmiPanel({
 
             {/* Desktop: tabel */}
             <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)] md:block">
-              <div className="w-full overflow-x-auto">
-                <table className="w-full table-fixed border-collapse text-[13px]" style={{ minWidth: 1320 }}>
-                  <colgroup>
-                    <col style={{ width: 50 }} />
-                    <col style={{ width: 140 }} />
-                    <col style={{ width: 120 }} />
-                    <col style={{ width: 145 }} />
-                    <col style={{ width: 185 }} />
-                    <col style={{ width: 140 }} />
-                    <col style={{ width: 175 }} />
-                    <col style={{ width: 140 }} />
-                    <col style={{ width: 90 }} />
-                    <col style={{ width: 75 }} />
-                    <col style={{ width: 60 }} />
-                  </colgroup>
-                  <thead>
-                    <tr>
-                      {["No", "Hostname", "Username", "IP Address", "MAC Address", "Komputer", "Monitor", "OS", "Disk", "Fitur", ""].map((h, i) => (
-                        <th
-                          key={h + i}
-                          className={`whitespace-nowrap border-b border-slate-200 bg-slate-50 px-3 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 ${
-                            i === 10 ? "text-right" : "text-left"
-                          }`}
-                        >
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {items.map((c) => (
-                      <tr
-                        key={c.no}
-                        onClick={() => setDetail(c)}
-                        className="cursor-pointer transition hover:bg-slate-50"
+              <table className="w-full table-fixed border-collapse text-[13px]">
+                <colgroup>
+                  <col style={{ width: "4%" }} />
+                  <col style={{ width: "16%" }} />
+                  <col style={{ width: "12%" }} />
+                  <col style={{ width: "15%" }} />
+                  <col style={{ width: "15%" }} />
+                  <col style={{ width: "16%" }} />
+                  <col style={{ width: "12%" }} />
+                  <col style={{ width: "6%" }} />
+                  <col style={{ width: "4%" }} />
+                </colgroup>
+                <thead>
+                  <tr>
+                    {["No", "Hostname", "IP Address", "MAC Address", "Komputer", "Monitor", "OS", "Fitur", ""].map((h, i) => (
+                      <th
+                        key={h + i}
+                        className={`whitespace-nowrap border-b border-slate-200 bg-slate-50 px-3 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 ${
+                          i === 8 ? "text-right" : "text-left"
+                        }`}
                       >
-                        <td className="px-3 py-3 tabular-nums text-slate-400">{c.no}</td>
-                        <td className="truncate px-3 py-3 font-semibold text-slate-900">{c.hostname ?? "—"}</td>
-                        <td className="truncate px-3 py-3 font-mono text-[12px] text-slate-600">
-                          {c.username ?? "—"}
-                        </td>
-                        <td className="px-3 py-3">
-                          <span className="font-medium tabular-nums text-slate-900">
-                            {c.ip}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3">
-                          <div className="truncate font-mono text-[12px] tabular-nums text-slate-600">
-                            {c.mac1}
-                            {c.mac2 && <div className="truncate text-slate-400">{c.mac2}</div>}
-                          </div>
-                        </td>
-                        <td className="truncate px-3 py-3 font-medium text-slate-800">{c.computer}</td>
-                        <td className="px-3 py-3 text-slate-600">
-                          <div className="truncate">{c.monitor}</div>
-                          <div className="truncate text-[11px] text-slate-400">{c.displayOutput} → {c.monitorInput}</div>
-                        </td>
-                        <td className="px-3 py-3">
-                          <Badge className={osTone()}>{c.osVersion}</Badge>
-                        </td>
-                        <td className="truncate px-3 py-3 text-slate-600">
-                          {c.diskType}
-                          <div className="truncate text-[11px] text-slate-400">{c.diskCapacity}</div>
-                        </td>
-                        <td className="px-3 py-3">
-                          <div className="flex gap-1">
-                            {c.specialHardware === "KVM" && <Badge className="bg-slate-100 text-slate-700">KVM</Badge>}
-                            {c.mac2 && <Badge className="bg-slate-100 text-slate-900">2 LAN</Badge>}
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 text-right">
-                          <span className="text-xs font-medium text-slate-500">
-                            Detail →
-                          </span>
-                        </td>
-                      </tr>
+                        {h}
+                      </th>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {items.map((c) => (
+                    <tr
+                      key={c.no}
+                      onClick={() => setDetail(c)}
+                      className="group cursor-pointer transition hover:bg-slate-50"
+                    >
+                      <td className="px-3 py-3 tabular-nums text-slate-400">{c.no}</td>
+
+                      <td className="px-3 py-3">
+                        <div className="truncate font-semibold text-slate-900">
+                          {c.hostname ?? "—"}
+                        </div>
+                        <div className="truncate font-mono text-[11px] text-slate-400">
+                          {c.username ?? "—"}
+                        </div>
+                      </td>
+
+                      <td className="px-3 py-3">
+                        <span className="font-medium tabular-nums text-slate-900">
+                          {c.ip}
+                        </span>
+                      </td>
+
+                      <td className="px-3 py-3">
+                        <div className="truncate font-mono text-[11.5px] tabular-nums text-slate-600">
+                          {c.mac1}
+                        </div>
+                        {c.mac2 && (
+                          <div className="truncate font-mono text-[11px] tabular-nums text-slate-400">
+                            {c.mac2}
+                          </div>
+                        )}
+                      </td>
+
+                      <td className="px-3 py-3">
+                        <div className="truncate font-medium text-slate-800">
+                          {c.computer}
+                        </div>
+                        <div className="truncate text-[11px] text-slate-400">
+                          {c.diskType} · {c.diskCapacity}
+                        </div>
+                      </td>
+
+                      <td className="px-3 py-3">
+                        <div className="truncate text-slate-700">{c.monitor}</div>
+                        <div className="truncate text-[11px] text-slate-400">
+                          {c.displayOutput} → {c.monitorInput}
+                        </div>
+                      </td>
+
+                      <td className="px-3 py-3">
+                        <Badge className={osTone()}>{c.osVersion}</Badge>
+                      </td>
+
+                      <td className="px-3 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          {c.specialHardware === "KVM" && (
+                            <Badge className="bg-slate-100 text-slate-700">KVM</Badge>
+                          )}
+                          {c.mac2 && (
+                            <Badge className="bg-slate-100 text-slate-900">2 LAN</Badge>
+                          )}
+                        </div>
+                      </td>
+
+                      <td className="px-3 py-3 text-right">
+                        <ChevronRight
+                          size={16}
+                          className="ml-auto text-slate-300 transition group-hover:text-slate-500"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         ))}
