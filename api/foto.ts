@@ -116,18 +116,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(429).json({ error: "Terlalu banyak percobaan." });
   }
 
-  const expected = process.env.ACCESS_PASSWORD;
-  if (!expected) {
-    return res.status(500).json({ error: "Server belum dikonfigurasi." });
-  }
-
-  const password = String(req.body?.password ?? "");
-  if (!password || !safeEqual(password, expected)) {
-    noteFailure(ip);
-    return res.status(401).json({ error: "Password salah." });
-  }
-
   const action = String(req.body?.action ?? "list");
+
+  // "list" bersifat PUBLIK (halaman bisa dilihat tanpa password).
+  // add / update / delete tetap WAJIB password.
+  if (action !== "list") {
+    const expected = process.env.ACCESS_PASSWORD;
+    if (!expected) {
+      return res.status(500).json({ error: "Server belum dikonfigurasi." });
+    }
+    const password = String(req.body?.password ?? "");
+    if (!password || !safeEqual(password, expected)) {
+      noteFailure(ip);
+      return res.status(401).json({ error: "Password salah." });
+    }
+  }
 
   try {
     const data = await readData();

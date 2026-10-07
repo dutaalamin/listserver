@@ -26,11 +26,15 @@ function Badge({ children, className }: { children: React.ReactNode; className?:
 export function HmiPanel({
   computers,
   password,
+  canEdit,
+  onRequestUnlock,
   onSaved,
   onChanged,
 }: {
   computers: Computer[];
   password: string;
+  canEdit: boolean;
+  onRequestUnlock: () => void;
   onSaved: (c: Computer) => void;
   onChanged: (list: Computer[]) => void;
 }) {
@@ -237,7 +241,7 @@ export function HmiPanel({
               {detail.mac2 && <Badge className="bg-slate-100 text-slate-700">2 Kabel LAN</Badge>}
               {!editing && (
                 <button
-                  onClick={mulaiEdit}
+                  onClick={() => (canEdit ? mulaiEdit() : onRequestUnlock())}
                   className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3.5 text-[13px] font-medium text-slate-700 transition hover:bg-slate-50"
                 >
                   <Pencil size={15} />
@@ -245,7 +249,7 @@ export function HmiPanel({
                 </button>
               )}
               <button
-                onClick={() => hapusHmi(detail)}
+                onClick={() => (canEdit ? hapusHmi(detail) : onRequestUnlock())}
                 disabled={saving}
                 className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3.5 text-[13px] font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50"
               >
@@ -458,6 +462,10 @@ export function HmiPanel({
 
             <button
               onClick={() => {
+                if (!canEdit) {
+                  onRequestUnlock();
+                  return;
+                }
                 setTambah({
                   hostname: "",
                   username: "",

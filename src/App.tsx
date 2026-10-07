@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, Server, Monitor, Camera } from "lucide-react";
-import { fetchPortalData, type ServerItem } from "./api";
+import { Loader2, Server, Monitor, Camera, Lock, Unlock } from "lucide-react";
+import { fetchPortalData, verifyPassword, type ServerItem } from "./api";
 import type { Computer } from "./lib";
 import { PasswordGate } from "./PasswordGate";
 import { ServerList } from "./ServerList";
@@ -16,46 +16,29 @@ export default function App() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("server");
+  // true saat user menekan "Buka Edit" -> tampilkan modal password
+  const [askUnlock, setAskUnlock] = useState(false);
 
-  const unlock = useCallback(async (password: string) => {
-    const d = await fetchPortalData(password);
-    setData(d);
-    setPassword(password);
-    try {
-      sessionStorage.setItem(KEY, password);
-    } catch {
-      /* abaikan */
-    }
-  }, []);
-
+  // Data selalu dimuat tanpa password (halaman publik).
   useEffect(() => {
     let cancelled = false;
     const saved = (() => {
       try {
-        return sessionStorage.getItem(KEY);
+        return sessionStorage.getItem(KEY) ?? "";
       } catch {
-        return null;
+        return "";
       }
     })();
 
-    if (!saved) {
-      setLoading(false);
-      return;
-    }
-
     fetchPortalData(saved)
       .then((d) => {
-        if (!cancelled) {
-          setData(d);
-          setPassword(saved);
-        }
+        if (cancelled) return;
+        setData(d);
+        // Kalau password tersimpan ternyata masih valid, buka kunci otomatis.
+        if (saved) setPassword(saved);
       })
       .catch(() => {
-        try {
-          sessionStorage.removeItem(KEY);
-        } catch {
-          /* abaikan */
-        }
+        if (!cancelled) setData({ servers: [], hmi: [] });
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -66,6 +49,28 @@ export default function App() {
     };
   }, []);
 
+  // Dipanggil dari modal: verifikasi password untuk membuka kunci edit.
+  const unlock = useCallback(async (pw: string) => {
+    const d = await verifyPassword(pw);
+    setData(d);
+    setPassword(pw);
+    setAskUnlock(false);
+    try {
+      sessionStorage.setItem(KEY, pw);
+    } catch {
+      /* abaikan */
+    }
+  }, []);
+
+  const lock = useCallback(() => {
+    setPassword("");
+    try {
+      sessionStorage.removeItem(KEY);
+    } catch {
+      /* abaikan */
+    }
+  }, []);
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
@@ -74,11 +79,11 @@ export default function App() {
     );
   }
 
-  if (!data) return <PasswordGate onUnlock={unlock} />;
+  const locked = !password;
 
   const TABS: { id: Tab; label: string; icon: typeof Server; count: number }[] = [
-    { id: "server", label: "List Server", icon: Server, count: data.servers.length },
-    { id: "hmi", label: "HMI Plate Mill", icon: Monitor, count: data.hmi.length },
+    { id: "server", label: "List Server", icon: Server, count: data?.servers.length ?? 0 },
+    { id: "hmi", label: "HMI Plate Mill", icon: Monitor, count: data?.hmi.length ?? 0 },
     { id: "foto", label: "Foto Spek PC", icon: Camera, count: 5 },
   ];
 
@@ -86,8 +91,8 @@ export default function App() {
     <div className="min-h-screen bg-slate-50">
       {/* Tab menu */}
       <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
-          <nav className="-mb-px flex gap-1 overflow-x-auto">
+        <div className="mx-auto flex max-w-[1400px] items-center gap-3 px-4 sm:px-6">
+          <nav className="-mb-px flex flex-1 gap-1 overflow-x-auto">
             {TABS.map((t) => {
               const aktif = tab === t.id;
               const Icon = t.icon;
@@ -114,6 +119,25 @@ export default function App() {
               );
             })}
           </nav>
+
+          {/* Kunci edit */}
+          {locked ? (
+            <button
+              onClick={() => setAskUnlock(true)}
+              className="inline-flex h-9 shrink-0 items-center gap-2 rounded-xl bg-slate-900 px-3.5 text-[13px] font-medium text-white transition hover:bg-slate-800"
+            >
+              <Lock size={15} />
+              <span className="hidden sm:inline">Buka Edit</span>
+            </button>
+          ) : (
+            <button
+              onClick={lock}
+              className="inline-flex h-9 shrink-0 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3.5 text-[13px] font-medium text-slate-600 transition hover:bg-slate-100"
+            >
+              <Unlock size={15} />
+              <span className="hidden sm:inline">Mode Edit</span>
+            </button>
+          )}
         </div>
       </header>
 
@@ -121,16 +145,20 @@ export default function App() {
       <main className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6">
         {tab === "server" ? (
           <ServerList
-            servers={data.servers}
+            servers={data?.servers ?? []}
             password={password}
+            canEdit={!locked}
+            onRequestUnlock={() => setAskUnlock(true)}
             onChanged={(list) =>
               setData((prev) => (prev ? { ...prev, servers: list } : prev))
             }
           />
         ) : tab === "hmi" ? (
           <HmiPanel
-            computers={data.hmi}
+            computers={data?.hmi ?? []}
             password={password}
+            canEdit={!locked}
+            onRequestUnlock={() => setAskUnlock(true)}
             onSaved={(updated) =>
               setData((prev) =>
                 prev
@@ -146,9 +174,22 @@ export default function App() {
             }
           />
         ) : (
-          <SpekFotoGaleri password={password} />
+          <SpekFotoGaleri
+            password={password}
+            canEdit={!locked}
+            onRequestUnlock={() => setAskUnlock(true)}
+          />
         )}
       </main>
+
+      {/* Modal buka kunci edit */}
+      {askUnlock && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-[380px]">
+            <PasswordGate onUnlock={unlock} onCancel={() => setAskUnlock(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

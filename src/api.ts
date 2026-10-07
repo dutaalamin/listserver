@@ -9,11 +9,11 @@ export interface ServerItem {
 }
 
 /**
- * Ambil data dari server setelah password benar.
- * Data TIDAK ada di bundle browser — hanya diterima setelah lolos cek server.
+ * Ambil data portal. Bisa dipanggil TANPA password (halaman publik) atau
+ * DENGAN password (sekaligus memverifikasi untuk membuka kunci edit).
  */
 export async function fetchPortalData(
-  password: string,
+  password = "",
 ): Promise<{ servers: ServerItem[]; hmi: Computer[] }> {
   const res = await fetch("/api/data", {
     method: "POST",
@@ -33,6 +33,16 @@ export async function fetchPortalData(
 
   const json = (await res.json()) as { servers: ServerItem[]; hmi: Computer[] };
   return { servers: json.servers, hmi: json.hmi };
+}
+
+/**
+ * Verifikasi password untuk membuka kunci edit. Mengembalikan data terbaru
+ * sekaligus, supaya setelah unlock daftar langsung segar.
+ */
+export async function verifyPassword(
+  password: string,
+): Promise<{ servers: ServerItem[]; hmi: Computer[] }> {
+  return fetchPortalData(password);
 }
 
 /** Simpan (tambah/ubah) atau hapus server. Mengembalikan daftar terbaru. */

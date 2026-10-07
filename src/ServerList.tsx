@@ -12,10 +12,14 @@ const KOSONG: Draft = { name: "", ipAddress: "", location: "", category: "" };
 export function ServerList({
   servers,
   password,
+  canEdit,
+  onRequestUnlock,
   onChanged,
 }: {
   servers: Server[];
   password: string;
+  canEdit: boolean;
+  onRequestUnlock: () => void;
   onChanged: (list: ServerItem[]) => void;
 }) {
   const [q, setQ] = useState("");
@@ -102,6 +106,10 @@ export function ServerList({
           </div>
           <button
             onClick={() => {
+              if (!canEdit) {
+                onRequestUnlock();
+                return;
+              }
               setEdit({ ...KOSONG });
               setPesan(null);
             }}
@@ -228,6 +236,10 @@ export function ServerList({
                   <div className="mt-2 flex items-center gap-3">
                     <button
                       onClick={() => {
+                        if (!canEdit) {
+                          onRequestUnlock();
+                          return;
+                        }
                         setEdit({ id: s.id, name: s.name, ipAddress: s.ipAddress, location: s.location, category: s.category });
                         setPesan(null);
                       }}
@@ -236,7 +248,7 @@ export function ServerList({
                       <Pencil size={13} /> Edit
                     </button>
                     <button
-                      onClick={() => hapus(s)}
+                      onClick={() => (canEdit ? hapus(s) : onRequestUnlock())}
                       disabled={saving}
                       className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 disabled:opacity-50"
                     >
@@ -285,6 +297,10 @@ export function ServerList({
                           <div className="inline-flex items-center gap-2">
                             <button
                               onClick={() => {
+                                if (!canEdit) {
+                                  onRequestUnlock();
+                                  return;
+                                }
                                 setEdit({ id: s.id, name: s.name, ipAddress: s.ipAddress, location: s.location, category: s.category });
                                 setPesan(null);
                               }}
@@ -293,7 +309,7 @@ export function ServerList({
                               <Pencil size={13} /> Edit
                             </button>
                             <button
-                              onClick={() => hapus(s)}
+                              onClick={() => (canEdit ? hapus(s) : onRequestUnlock())}
                               disabled={saving}
                               className="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-slate-900 disabled:opacity-50"
                             >

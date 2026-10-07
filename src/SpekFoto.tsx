@@ -61,7 +61,15 @@ async function kompres(file: File): Promise<File> {
   return new File([blob], "foto.jpg", { type: "image/jpeg" });
 }
 
-export function SpekFotoGaleri({ password }: { password: string }) {
+export function SpekFotoGaleri({
+  password,
+  canEdit,
+  onRequestUnlock,
+}: {
+  password: string;
+  canEdit: boolean;
+  onRequestUnlock: () => void;
+}) {
   const [daftar, setDaftar] = useState<SpekFotoItem[]>([]);
   const [memuat, setMemuat] = useState(true);
   const [q, setQ] = useState("");
@@ -228,7 +236,7 @@ export function SpekFotoGaleri({ password }: { password: string }) {
             <span className="font-semibold text-slate-700">{hasil.length}</span> foto
           </p>
           <button
-            onClick={() => setTambahBuka((v) => !v)}
+            onClick={() => (canEdit ? setTambahBuka((v) => !v) : onRequestUnlock())}
             className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3.5 py-2 text-[13px] font-semibold text-white transition hover:bg-slate-800"
           >
             <Plus size={15} />
@@ -369,13 +377,13 @@ export function SpekFotoGaleri({ password }: { password: string }) {
                   </p>
                   <div className="mt-3 flex gap-2">
                     <button
-                      onClick={() => setEdit({ ...f })}
+                      onClick={() => (canEdit ? setEdit({ ...f }) : onRequestUnlock())}
                       className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12px] font-medium text-slate-600 transition hover:bg-slate-50"
                     >
                       <Pencil size={13} /> Edit
                     </button>
                     <button
-                      onClick={() => hapus(f)}
+                      onClick={() => (canEdit ? hapus(f) : onRequestUnlock())}
                       className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12px] font-medium text-red-600 transition hover:bg-red-50"
                     >
                       <Trash2 size={13} /> Hapus
