@@ -126,9 +126,25 @@ function storedList(data: Record<string, unknown>): SpekFoto[] {
   return Array.isArray(d) ? (d as SpekFoto[]) : [];
 }
 
-/** Gabungan: unggahan dulu, lalu foto statis. Dipakai untuk MENAMPILKAN. */
+/** Id foto statis yang disembunyikan (dihapus user). */
+function hiddenIds(data: Record<string, unknown>): string[] {
+  const d = data.spekHidden;
+  return Array.isArray(d) ? (d as string[]) : [];
+}
+
+/** Perubahan metadata untuk foto statis (hostname/ip/model). */
+function overrides(data: Record<string, unknown>): Record<string, Partial<SpekFoto>> {
+  const d = data.spekEdit;
+  return d && typeof d === "object" ? (d as Record<string, Partial<SpekFoto>>) : {};
+}
+
+/** Gabungan: unggahan dulu, lalu foto statis (yang belum disembunyikan). */
 function ambilDaftar(data: Record<string, unknown>): SpekFoto[] {
-  return [...storedList(data), ...staticList()];
+  const hidden = new Set(hiddenIds(data));
+  const ov = overrides(data);
+  return [...storedList(data), ...staticList()]
+    .filter((f) => !hidden.has(f.id))
+    .map((f) => (ov[f.id] ? { ...f, ...ov[f.id] } : f));
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -226,15 +242,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (action === "update") {
       const id = String(req.body?.id ?? "");
       const patch = (req.body?.patch ?? {}) as Record<string, unknown>;
+      const ambil = (k: string) => String(patch[k] ?? "").trim();
+
+      // Foto statis -> simpan perubahan sebagai override.
+      if (staticList().some((x) => x.id === id)) {
+        const ov = overrides(data);
+        const lama = ov[id] ?? {};
+        const baru = { ...lama };
+        if ("hostname" in patch) baru.hostname = ambil("hostname");
+        if ("ip" in patch) baru.ip = ambil("ip");
+        if ("model" in patch) baru.model = ambil("model");
+        ov[id] = baru;
+        data.spekEdit = ov;
+        await writeData(data);
+        res.setHeader("Cache-Control", "no-store");
+        return res.status(200).json({ ok: true, foto: ambilDaftar(data) });
+      }
+
       const daftar = storedList(data);
       const idx = daftar.findIndex((x) => x.id === id);
       if (idx === -1) {
         return res.status(404).json({ error: "Foto tidak ditemukan." });
       }
       const baru = { ...daftar[idx] };
-      if ("hostname" in patch) baru.hostname = String(patch.hostname ?? "").trim();
-      if ("ip" in patch) baru.ip = String(patch.ip ?? "").trim();
-      if ("model" in patch) baru.model = String(patch.model ?? "").trim();
+      if ("hostname" in patch) baru.hostname = ambil("hostname");
+      if ("ip" in patch) baru.ip = ambil("ip");
+      if ("model" in patch) baru.model = ambil("model");
       daftar[idx] = baru;
       data.spekFoto = daftar;
       await writeData(data);
@@ -246,18 +279,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // ---------- DELETE ----------
     if (action === "delete") {
       const id = String(req.body?.id ?? "");
+      const statis = staticList().find((x) => x.id === id);
+
+      // Foto statis (ada di repo) -> cukup "sembunyikan" dengan mencatat id-nya.
+      if (statis) {
+        const hidden = hiddenIds(data);
+        if (!hidden.includes(id)) hidden.push(id);
+        data.spekHidden = hidden;
+        await writeData(data);
+        res.setHeader("Cache-Control", "no-store");
+        return res.status(200).json({ ok: true, foto: ambilDaftar(data) });
+      }
+
+      // Foto unggahan -> hapus file blob + metadatanya.
       const daftar = storedList(data);
       const target = daftar.find((x) => x.id === id);
       if (!target) {
         return res.status(404).json({ error: "Foto tidak ditemukan." });
       }
-      // Hapus file blob hanya untuk foto hasil unggahan (bukan foto statis)
-      if (!target.id.startsWith("statik-")) {
-        try {
-          await del(target.nama);
-        } catch {
-          /* kalau blob sudah tidak ada, lanjut hapus metadata */
-        }
+      try {
+        await del(target.nama);
+      } catch {
+        /* kalau blob sudah tidak ada, lanjut hapus metadata */
       }
       data.spekFoto = daftar.filter((x) => x.id !== id);
       await writeData(data);
