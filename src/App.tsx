@@ -84,7 +84,7 @@ export default function App() {
   const TABS: { id: Tab; label: string; icon: typeof Server; count: number }[] = [
     { id: "server", label: "List Server", icon: Server, count: data?.servers.length ?? 0 },
     { id: "hmi", label: "HMI Plate Mill", icon: Monitor, count: data?.hmi.length ?? 0 },
-    { id: "foto", label: "Foto Spek PC", icon: Camera, count: 5 },
+    { id: "foto", label: "Foto Spek PC", icon: Camera, count: 27 },
   ];
 
   return (

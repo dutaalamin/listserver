@@ -83,9 +83,8 @@ async function writeData(data: unknown) {
   });
 }
 
-function ambilDaftar(data: Record<string, unknown>): SpekFoto[] {
-  const d = data.spekFoto;
-  if (Array.isArray(d)) return d as SpekFoto[];
+/** Daftar foto statis yang ada di /public/spek (tidak disimpan di blob). */
+function staticList(): SpekFoto[] {
   // Migrasi awal: 5 foto lama yang tersimpan sebagai file statis di /public/spek
   const lama: Array<[string, string, string, string]> = [
     ["hmi28", "KP1HMI28", "172.21.86.143", "HP Desktop M01-F2xxx"],
@@ -94,7 +93,7 @@ function ambilDaftar(data: Record<string, unknown>): SpekFoto[] {
     ["hmi79", "KP1HMI79", "172.21.86.167", "HP EliteDesk 800 G1 SFF"],
     ["tlka0t4", "DESKTOP-TLKA0T4", "172.21.86.168", "HP 280 G3 MT"],
   ];
-  return lama.map(([kode, hostname, ip, model], i) => ({
+  const dasar = lama.map(([kode, hostname, ip, model], i) => ({
     id: `statik-${kode}`,
     nama: `spek/${kode}.jpg`,
     url: `/spek/${kode}.jpg`,
@@ -103,6 +102,33 @@ function ambilDaftar(data: Record<string, unknown>): SpekFoto[] {
     model,
     waktu: i,
   }));
+
+  // Foto HMI hasil dokumentasi lapangan (statis, ada di /public/spek).
+  const lapangan: SpekFoto[] = Array.from({ length: 22 }, (_, i) => {
+    const n = String(i + 1).padStart(2, "0");
+    return {
+      id: `statik-spek-${n}`,
+      nama: `spek/spek-${n}.png`,
+      url: `/spek/spek-${n}.png`,
+      hostname: `HMI-${n}`,
+      ip: "",
+      model: "",
+      waktu: 100 + i,
+    };
+  });
+
+  return [...dasar, ...lapangan];
+}
+
+/** Foto yang tersimpan (hasil unggahan) — tanpa foto statis. */
+function storedList(data: Record<string, unknown>): SpekFoto[] {
+  const d = data.spekFoto;
+  return Array.isArray(d) ? (d as SpekFoto[]) : [];
+}
+
+/** Gabungan: unggahan dulu, lalu foto statis. Dipakai untuk MENAMPILKAN. */
+function ambilDaftar(data: Record<string, unknown>): SpekFoto[] {
+  return [...storedList(data), ...staticList()];
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -178,7 +204,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         contentType: mime,
       });
 
-      const daftar = ambilDaftar(data);
+      const daftar = storedList(data);
       const baru: SpekFoto = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         nama: namaFile,
@@ -193,14 +219,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await writeData(data);
 
       res.setHeader("Cache-Control", "no-store");
-      return res.status(200).json({ ok: true, foto: data.spekFoto });
+      return res.status(200).json({ ok: true, foto: ambilDaftar(data) });
     }
 
     // ---------- UPDATE ----------
     if (action === "update") {
       const id = String(req.body?.id ?? "");
       const patch = (req.body?.patch ?? {}) as Record<string, unknown>;
-      const daftar = ambilDaftar(data);
+      const daftar = storedList(data);
       const idx = daftar.findIndex((x) => x.id === id);
       if (idx === -1) {
         return res.status(404).json({ error: "Foto tidak ditemukan." });
@@ -214,13 +240,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await writeData(data);
 
       res.setHeader("Cache-Control", "no-store");
-      return res.status(200).json({ ok: true, foto: daftar });
+      return res.status(200).json({ ok: true, foto: ambilDaftar(data) });
     }
 
     // ---------- DELETE ----------
     if (action === "delete") {
       const id = String(req.body?.id ?? "");
-      const daftar = ambilDaftar(data);
+      const daftar = storedList(data);
       const target = daftar.find((x) => x.id === id);
       if (!target) {
         return res.status(404).json({ error: "Foto tidak ditemukan." });
@@ -237,7 +263,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await writeData(data);
 
       res.setHeader("Cache-Control", "no-store");
-      return res.status(200).json({ ok: true, foto: data.spekFoto });
+      return res.status(200).json({ ok: true, foto: ambilDaftar(data) });
     }
 
     return res.status(400).json({ error: "Aksi tidak dikenal." });
